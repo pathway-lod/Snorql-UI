@@ -1,4 +1,4 @@
-## Snorql-UI - A SPARQL Explorer
+## Snorql-UI - A SPARQL Explorer for PlantMetWiki (Plant Metabolic Patways Wiki) 
 
 Simple SPARQL query interface based on the original idea of [kurtjx/SNORQL](https://github.com/kurtjx/SNORQL) and adapted from the fork [eccenca/SNORQL](https://github.com/eccenca/SNORQL) 
 
@@ -24,7 +24,7 @@ Live Demo of Snorql-UI:  [Demo 1](https://wikipathways.github.io/snorql-extended
 
 - If you have the SPARQL queries directly inside the repo, then use the full the URL of the repo like the following:
 
-  [https://github.com/wikipathways/SPARQLQueries](https://github.com/wikipathways/SPARQLQueries)
+  [https://github.com/pathway-lod/SPARQLQueries](https://github.com/pathway-lod/SPARQLQueries)
 
 
 - But in case the SPARQL queries are inside a folder in the repository, then you need to provide a GitHub API URL for that folder and that is constructed as follows:

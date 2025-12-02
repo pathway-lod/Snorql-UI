@@ -2,9 +2,38 @@
     border: 1px solid black;
     font-size: 13px;
 }
+/* Make the navbar tall enough for an 80px logo */
+
+/* Make the navbar taller and center its contents */
+.navbar {
+    min-height: 90px; /* tall enough for 80px logo + a bit of padding */
+}
+
+/* Brand container: logo + title inline */
+.pmw-brand {
+    display: flex !important;
+    align-items: center;   /* vertical centering inside the bar */
+    gap: 10px;             /* space between logo and text */
+    padding: 10px 15px;    /* standard navbar brand padding */
+}
+
+/* Logo inside navbar */
+.pmw-logo {
+    height: 90px;
+    flex-shrink: 0;
+    margin-top: 25px;      /* tweak this number until it looks right */
+}
+
+/* Title next to logo */
+.pmw-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+    white-space: nowrap;
+}
 
 footer{
-    height: 50px;
+    height: 80px;
     background-color: #f5f5f5;
 }
 
