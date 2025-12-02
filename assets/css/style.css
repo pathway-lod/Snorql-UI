@@ -6,7 +6,15 @@
 
 /* Make the navbar taller and center its contents */
 .navbar {
-    min-height: 90px; /* tall enough for 80px logo + a bit of padding */
+    min-height: 70px; /* tall enough for 80px logo + a bit of padding */
+}
+
+/* Override Bootstrap's tiny default brand height */
+.navbar-brand {
+    height: auto !important;
+    padding: 5px 5px !important;
+    display: flex !important;
+    align-items: center;
 }
 
 /* Brand container: logo + title inline */
@@ -21,7 +29,7 @@
 .pmw-logo {
     height: 90px;
     flex-shrink: 0;
-    margin-top: 25px;      /* tweak this number until it looks right */
+    margin-top: 15px;      /* tweak this number until it looks right */
 }
 
 /* Title next to logo */
