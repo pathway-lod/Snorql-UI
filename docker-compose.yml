@@ -17,7 +17,7 @@ services:
 #    volumes:
 #      - /home/MarvinMartens/snorql-extended:/usr/local/apache2/htdocs # To customize the snorql interface, clone the GitHub repo and use its directory as SNORQL_WEB_FILES_DIR
     environment:
-      - SNORQL_ENDPOINT=https://plantmetwiki.bioinformatics.nl/sparql # virtuoso endpoint
+      - SNORQL_ENDPOINT=https://sparql-plantmetwiki.bioinformatics.nl/sparql # virtuoso endpoint, proxy to https://plantmetwiki.bioinformatics.nl/sparql
       - SNORQL_EXAMPLES_REPO=https://github.com/pathway-lod/SPARQLQueries
       - SNORQL_TITLE=Plant Metabolic Pathways Wiki SNORQL UI 
       - DEFAULT_GRAPH=http://rdf.plantwiki.org/
