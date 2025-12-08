@@ -1,25 +1,22 @@
-version: "3"
-
 services:
   wikipathways-virtuoso:
     image: openlink/virtuoso-opensource-7:7.2.11
     restart: always
     container_name: wikipathways-virtuoso
-    volumes:
-      - VIRTUOSO_DB_PERSISTENT_DIR:/database # directory to persist the Virtuoso database. If empty dir, a new database will be created
     environment:
       - DBA_PASSWORD=dbaisapasswordthatshouldbeupdated
       - SPARQL_UPDATE=false
   snorql:
-    image: plantmetwiki-snorql-ui:latest
+    build: .
     restart: always
     container_name: wikipathways-snorql
 #    volumes:
 #      - /home/MarvinMartens/snorql-extended:/usr/local/apache2/htdocs # To customize the snorql interface, clone the GitHub repo and use its directory as SNORQL_WEB_FILES_DIR
     environment:
-      - SNORQL_ENDPOINT=https://sparql-plantmetwiki.bioinformatics.nl/sparql # virtuoso endpoint, proxy to https://plantmetwiki.bioinformatics.nl/sparql
+      - SNORQL_ENDPOINT=http://localhost:8900/sparql # virtuoso endpoint, proxy to https://plantmetwiki.bioinformatics.nl/sparql
       - SNORQL_EXAMPLES_REPO=https://github.com/pathway-lod/SPARQLQueries
       - SNORQL_TITLE=Plant Metabolic Pathways Wiki SNORQL UI 
       - DEFAULT_GRAPH=http://rdf.plantwiki.org/
     ports:
+      - "8088:80"
       - "4430:443"
