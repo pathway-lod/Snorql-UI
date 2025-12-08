@@ -3,6 +3,8 @@ services:
     image: openlink/virtuoso-opensource-7:7.2.11
     restart: always
     container_name: wikipathways-virtuoso
+#    volumes:
+#      - ./virtuoso-data:/database  # Uncomment to persist Virtuoso database. Create this directory first: mkdir virtuoso-data
     environment:
       - DBA_PASSWORD=dba123
       - SPARQL_UPDATE=false
