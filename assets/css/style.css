@@ -76,6 +76,21 @@ footer p{
   white-space: normal;
 }
 
+
+.github-icon {
+    height: 18px;
+    width: 18px;
+    margin-right: 5px;
+}
+
+.footer-github {
+    align-items: center;
+}
+
+#footer.footer .footer-line {
+    white-space: normal;     /* ensure wrapping works on smaller screens */
+}
+
 /* Optional: slightly smaller text on small screens */
 @media (max-width: 768px) {
   #footer.footer {
