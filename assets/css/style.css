@@ -17,6 +17,33 @@
     align-items: center;
 }
 
+/* Align brand and right-side nav on same horizontal line */
+.navbar .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;   /* vertically align logo+title with "Tutorial" */
+}
+
+/* Make Tutorial look like a normal nav link, but larger */
+.nav-tutorial-link {
+    font-size: 18px;
+  
+    padding: 20px 10px;    /* vertical centering in the navbar */
+    color: #333 !important;
+    text-decoration: none;
+}
+
+.nav-tutorial-link:hover {
+    color: #0077cc !important;   /* subtle hover highlight */
+    text-decoration: underline;
+}
+
+/* Fix alignment of brand area */
+.navbar-header {
+    display: flex;
+    align-items: center;
+}
+
 /* Brand container: logo + title inline */
 .pmw-brand {
     display: flex !important;
@@ -29,7 +56,7 @@
 .pmw-logo {
     height: 90px;
     flex-shrink: 0;
-    margin-top: 15px;      /* tweak this number until it looks right */
+    
 }
 
 /* Title next to logo */
@@ -170,3 +197,4 @@ footer p{
 .buttons-holder .btn{
     margin: 3px;
 }
+
