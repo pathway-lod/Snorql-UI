@@ -67,3 +67,6 @@ let encodedQueryUrl = endpoint + encodeURI(sparql);
 // now, encodedQueryUrl can be used for your own purpose
 ```
 
+## Locally testing the UI for dvelopment purposes 
+
+http://127.0.0.1:3000/plantwiki/Snorql-UI/
