@@ -48,7 +48,7 @@ Live Demo of Snorql-UI:  [Demo 1](https://wikipathways.github.io/snorql-extended
 
 ```javascript
 // the SPARQL endpoint URL followed by the query variable 'q'
-let endpoint = "https://sparql.wikipathways.org/?q=";
+let endpoint = "https://sparql-plantmetwiki.bioinformatics.nl/?q=";
 
 // The SPARQL query itself
 let sparql = `SELECT DISTINCT ?dataset (str(?titleLit) as ?title) ?date ?license 

@@ -17,25 +17,28 @@
     align-items: center;
 }
 
-/* Align brand and right-side nav on same horizontal line */
+/* Make navbar a flexbox so Tutorial goes right */
 .navbar .container {
     display: flex;
-    justify-content: space-between;
-    align-items: center;   /* vertically align logo+title with "Tutorial" */
+    align-items: center;
 }
 
-/* Make Tutorial look like a normal nav link, but larger */
+/* Push tutorial to the right */
+.tutorial-container {
+    margin-left: auto;
+}
+
+/* Style the link */
 .nav-tutorial-link {
     font-size: 18px;
-  
-    padding: 20px 10px;    /* vertical centering in the navbar */
+    padding: 20px 10px;
     color: #333 !important;
     text-decoration: none;
 }
 
 .nav-tutorial-link:hover {
-    color: #0077cc !important;   /* subtle hover highlight */
     text-decoration: underline;
+    color: #0077cc !important;
 }
 
 /* Fix alignment of brand area */
@@ -198,3 +201,16 @@ footer p{
     margin: 3px;
 }
 
+
+@media (max-width: 600px) {
+  .navbar .container {
+    flex-direction: column;      /* stack logo/title + right links */
+    align-items: flex-start;
+  }
+
+
+  .tutorial-container {
+    margin-left: 0;              /* no huge gap on mobile */
+    margin-top: 4px;
+  }
+}
