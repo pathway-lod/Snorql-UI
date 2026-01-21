@@ -46,4 +46,3 @@ snorql-extended/
 # Keep specific files tracked (override above patterns)
 !scripts/load.sh.template
 !scripts/load-rdf-example.sh
-!scripts/wikipathways-loader.sh
