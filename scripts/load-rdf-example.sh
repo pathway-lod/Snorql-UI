@@ -17,17 +17,25 @@
 # =============================================================================
 
 # ---------------------------------------------------------------------------
-# Configuration - Customize these variables
+# Configuration
 # ---------------------------------------------------------------------------
+# Source shared configuration if available (provides defaults for
+# VIRTUOSO_CONTAINER, VIRTUOSO_HOST, VIRTUOSO_ISQL_PORT, VIRTUOSO_USER,
+# VIRTUOSO_PASSWORD). Override any value via environment variables.
 
-# Virtuoso connection settings
-VIRTUOSO_HOST="localhost"
-VIRTUOSO_ISQL_PORT="1111"
-VIRTUOSO_USER="dba"
-VIRTUOSO_PASSWORD="dba123"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+[ -f "$SCRIPT_DIR/config.sh" ] && source "$SCRIPT_DIR/config.sh"
 
-# Container name (if using Docker)
-VIRTUOSO_CONTAINER="my-virtuoso"
+# Fallback defaults if config.sh not found
+VIRTUOSO_HOST="${VIRTUOSO_HOST:-localhost}"
+VIRTUOSO_ISQL_PORT="${VIRTUOSO_ISQL_PORT:-1111}"
+VIRTUOSO_USER="${VIRTUOSO_USER:-dba}"
+VIRTUOSO_PASSWORD="${VIRTUOSO_PASSWORD:-dba123}"
+VIRTUOSO_CONTAINER="${VIRTUOSO_CONTAINER:-my-virtuoso}"
+
+# ---------------------------------------------------------------------------
+# Script-Specific Configuration - Customize these for your data
+# ---------------------------------------------------------------------------
 
 # RDF data source (URL or local file path accessible to Virtuoso)
 # For URLs, Virtuoso will fetch the data directly
