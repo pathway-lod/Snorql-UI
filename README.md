@@ -67,3 +67,289 @@ let encodedQueryUrl = endpoint + encodeURI(sparql);
 // now, encodedQueryUrl can be used for your own purpose
 ```
 
+
+## Quick Start
+
+### Option 1: Static Files (No Docker)
+
+1. Clone the repository
+2. Edit `assets/js/snorql.js` and set:
+   - `_endpoint` - Your SPARQL endpoint URL
+   - `_examples_repo` - GitHub repo with .rq example files
+3. Open `index.html` in a browser or serve via any HTTP server
+
+### Option 2: Docker Compose
+
+1. Copy the example configuration:
+   ```bash
+   cp docker-compose.example.yml docker-compose.yml
+   ```
+2. Edit `docker-compose.yml` with your settings
+3. Start the services:
+   ```bash
+   docker-compose up -d
+   ```
+4. Access the UI at http://localhost:8088
+
+
+## Configuration
+
+### Environment Variables (Docker)
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `SNORQL_ENDPOINT` | SPARQL endpoint URL (as seen from browser) | `http://localhost:8890/sparql` |
+| `SNORQL_EXAMPLES_REPO` | GitHub repo with .rq example files | `https://github.com/owner/repo` |
+| `SNORQL_TITLE` | Browser tab title | `My SPARQL Explorer` |
+| `DEFAULT_GRAPH` | Default RDF graph (optional) | Leave empty for default |
+
+### URL Parameters
+
+You can override the SPARQL endpoint via URL parameter:
+```
+http://localhost:8088/?endpoint=http://other-endpoint/sparql
+```
+
+This is useful for linking to the UI with a specific endpoint pre-configured.
+
+
+## Docker Compose
+
+### Commands
+
+```bash
+# Start services in background
+docker-compose up -d
+
+# Stop services
+docker-compose down
+
+# View logs
+docker-compose logs -f
+
+# View logs for specific service
+docker-compose logs -f snorql
+
+# Rebuild after code changes
+docker-compose up -d --build
+```
+
+### Ports
+
+| Port | Service |
+|------|---------|
+| 8088 | Snorql-UI web interface |
+| 8890 | Virtuoso HTTP/SPARQL endpoint |
+| 1111 | Virtuoso ISQL (for data loading) |
+
+### Data Persistence
+
+To persist Virtuoso data between container restarts, uncomment the volumes section in `docker-compose.yml`:
+
+```yaml
+virtuoso:
+  volumes:
+    - ./virtuoso-data:/database
+```
+
+Create the directory first: `mkdir virtuoso-data`
+
+
+## Customization
+
+| Change | File | What to Modify |
+|--------|------|----------------|
+| SPARQL endpoint | `assets/js/snorql.js` | `_endpoint` variable |
+| Examples repo | `assets/js/snorql.js` | `_examples_repo` variable |
+| Page title | `index.html` | `<title>` tag |
+| Logo | `assets/images/` | Replace logo files |
+| Footer | `index.html` | Edit footer section |
+| Namespaces | `assets/js/namespaces.js` | `snorql_namespacePrefixes` object |
+| Bitly token | `assets/js/script.js` | `accessToken` (line 180) |
+
+### Branding
+
+To customize branding:
+1. Replace logo images in `assets/images/`
+2. Edit the footer section in `index.html`
+3. Update the page title in `index.html`
+
+
+## Loading RDF Data
+
+If using the included Virtuoso container, you can load RDF data using the example script:
+
+```bash
+# See scripts/load-rdf-example.sh for detailed instructions
+./scripts/load-rdf-example.sh
+```
+
+Basic Virtuoso data loading via isql:
+```bash
+# Connect to Virtuoso container
+docker exec -it my-virtuoso isql 1111 dba dba123
+
+# Load data from URL
+SPARQL LOAD <http://example.org/data.ttl> INTO GRAPH <http://example.org/graph>;
+checkpoint;
+quit;
+```
+
+
+## WikiPathways Production Setup
+
+The repository includes production configuration files used by WikiPathways. These serve as both a reference implementation and operational documentation.
+
+### Dual-Instance Architecture
+
+WikiPathways uses two instances (EP and EP2) for zero-downtime monthly data updates:
+
+| Instance | Virtuoso HTTP | Virtuoso ISQL | Snorql HTTP | Snorql HTTPS |
+|----------|---------------|---------------|-------------|--------------|
+| EP       | 8895          | 1115          | 8085        | 449          |
+| EP2      | 8891          | 1111          | 8084        | 446          |
+
+- **Odd months** (Jan, Mar, May...): EP is live, data loads into EP2
+- **Even months** (Feb, Apr, Jun...): EP2 is live, data loads into EP
+- nginx reverse proxy routes traffic to the live instance
+
+### Configuration Files
+
+| File | Purpose |
+|------|---------|
+| `docker-compose.wikipathways.yml` | EP instance configuration |
+| `docker-compose.wikipathways-ep2.yml` | EP2 instance configuration |
+| `scripts/wikipathways-loader.sh` | Automated monthly data loader |
+
+### Monthly Update Workflow
+
+```bash
+# 1. Run the loader (auto-detects which instance is offline)
+./scripts/wikipathways-loader.sh
+
+# 2. Validate with GitHub Actions (run your test suite)
+
+# 3. Switch nginx to the newly-loaded instance
+sudo nano /etc/nginx/sites-enabled/wikipathways
+sudo service nginx restart
+```
+
+### Customization
+
+Before using these files, update:
+- Volume paths in docker-compose files (default: `/home/MarvinMartens/WikiPathways-EP/`)
+- `DBA_PASSWORD` from default `dba` to a secure password
+- `BASE_DIR_EP` and `BASE_DIR_EP2` in the loader script
+
+
+## Adopting for Your Own SPARQL Endpoint
+
+This section guides you through setting up Snorql-UI with your own RDF data and SPARQL endpoint.
+
+### Folder Structure
+
+```
+your-project/
+├── db/                          # Virtuoso database files
+│   └── data/
+│       ├── load.sh              # Your customized loader script
+│       └── YourData.ttl         # Your RDF data file(s)
+├── scripts/
+│   ├── load.sh.template         # Template (don't modify)
+│   └── your-loader.sh           # Optional: automated data fetching
+├── docker-compose.yml           # Your configuration
+├── assets/                      # Snorql UI assets
+├── index.html                   # Snorql UI entry point
+└── ...
+```
+
+### Quick Start
+
+1. **Copy the example configuration:**
+   ```bash
+   cp docker-compose.example.yml docker-compose.yml
+   ```
+
+2. **Create data directory and loader script:**
+   ```bash
+   mkdir -p db/data
+   cp scripts/load.sh.template db/data/load.sh
+   chmod +x db/data/load.sh
+   ```
+
+3. **Customize the loader script (`db/data/load.sh`):**
+   - Set `GRAPH_URI` to your named graph (e.g., `http://yourdomain.org/data/`)
+   - Set `DATA_FILE` to your RDF file name
+   - Add your domain-specific namespace prefixes
+
+4. **Place your RDF data files in `db/data/`:**
+   - Supported formats: Turtle (`.ttl`), RDF/XML (`.rdf`), N-Triples (`.nt`)
+
+5. **Configure `docker-compose.yml`:**
+   - Update `SNORQL_ENDPOINT` to match your setup
+   - Set `SNORQL_EXAMPLES_REPO` to your GitHub queries repository
+   - Set `SNORQL_TITLE` for your browser tab
+
+6. **Start the services:**
+   ```bash
+   docker-compose up -d
+   ```
+
+7. **Load your data into Virtuoso:**
+   ```bash
+   docker exec -it my-virtuoso /bin/bash
+   cd /database/data
+   ./load.sh load.log dba123
+   exit
+   ```
+
+8. **Access the UI at http://localhost:8088**
+
+### Customization Checklist
+
+- [ ] **Graph URI** in `db/data/load.sh` - Your named graph identifier
+- [ ] **Namespace prefixes** in `db/data/load.sh` - Add your domain-specific prefixes
+- [ ] **SNORQL_ENDPOINT** in `docker-compose.yml` - Your SPARQL endpoint URL
+- [ ] **SNORQL_EXAMPLES_REPO** in `docker-compose.yml` - Your GitHub queries repository
+- [ ] **SNORQL_TITLE** in `docker-compose.yml` - Browser tab title
+- [ ] **DBA_PASSWORD** in `docker-compose.yml` - Secure password for production
+- [ ] **Optional:** `assets/js/namespaces.js` - For UI prefix expansion in results
+
+### Example: Minimal Custom Setup
+
+```bash
+# 1. Clone repository
+git clone https://github.com/wikipathways/Snorql-UI.git my-sparql-ui
+cd my-sparql-ui
+
+# 2. Set up configuration
+cp docker-compose.example.yml docker-compose.yml
+mkdir -p db/data
+cp scripts/load.sh.template db/data/load.sh
+
+# 3. Edit db/data/load.sh
+#    Change: GRAPH_URI="http://myproject.org/data/"
+#    Change: DATA_FILE="mydata.ttl"
+#    Add your namespace prefixes
+
+# 4. Copy your data file
+cp /path/to/mydata.ttl db/data/
+
+# 5. Edit docker-compose.yml
+#    Change: SNORQL_ENDPOINT=http://localhost:8890/sparql
+#    Change: SNORQL_EXAMPLES_REPO=https://github.com/myorg/sparql-queries
+#    Change: SNORQL_TITLE=My SPARQL Explorer
+
+# 6. Start and load
+docker-compose up -d
+docker exec -it my-virtuoso /bin/bash -c "cd /database/data && ./load.sh load.log dba123"
+
+# 7. Access at http://localhost:8088
+```
+
+### Tips
+
+- **Multiple data files:** Add multiple `ld_dir()` commands in `load.sh` or use wildcards
+- **Automated loading:** Create a script similar to `scripts/wikipathways-loader.sh` for scheduled updates
+- **Federated queries:** The template includes grants for SPARQL federation (SERVICE keyword)
+- **Namespace prefixes:** Also update `assets/js/namespaces.js` so URIs display as compact QNames in the UI
