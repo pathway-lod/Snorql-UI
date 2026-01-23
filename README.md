@@ -116,28 +116,83 @@ let encodedQueryUrl = endpoint + encodeURI(sparql);
 
 ### Option 2: Docker Compose
 
-1. Copy the example configuration:
+1. Copy the example configuration files:
    ```bash
    cp docker-compose.example.yml docker-compose.yml
+   cp .env.example .env
    ```
-2. Edit `docker-compose.yml` with your settings
+2. Edit `.env` with your settings (or edit `docker-compose.yml` directly)
 3. Start the services:
    ```bash
-   docker-compose up -d
+   docker compose up -d
    ```
 4. Access the UI at http://localhost:8088
 
 
 ## Configuration
 
-### Environment Variables (Docker)
+### Using .env Files
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `SNORQL_ENDPOINT` | SPARQL endpoint URL (as seen from browser) | `http://localhost:8890/sparql` |
-| `SNORQL_EXAMPLES_REPO` | GitHub repo with .rq example files | `https://github.com/owner/repo` |
-| `SNORQL_TITLE` | Browser tab title | `My SPARQL Explorer` |
-| `DEFAULT_GRAPH` | Default RDF graph (optional) | Leave empty for default |
+The easiest way to configure Snorql-UI is with a `.env` file. This file serves as the **single source of truth** for both Docker Compose and shell scripts.
+
+```bash
+# Copy the template
+cp .env.example .env
+
+# Edit with your settings
+nano .env
+
+# Verify configuration
+docker compose config
+
+# Start services
+docker compose up -d
+```
+
+The `.env` file is gitignored, so your local configuration won't be committed.
+
+**How configuration flows:**
+
+```
+.env (single source of truth)
+    │
+    ├── Docker Compose (reads .env automatically)
+    │       └── Container environment variables
+    │               └── script.sh (configures Snorql-UI at startup)
+    │
+    └── Shell scripts (via scripts/config.sh)
+            └── enable-cors.sh, load-rdf-example.sh, etc.
+```
+
+Shell scripts in `scripts/` source `config.sh`, which automatically loads your `.env` file. This means you only need to edit `.env` once - both Docker Compose and shell scripts will use the same values.
+
+### Environment Variables
+
+All variables can be set in `.env`, exported in your shell, or hardcoded in `docker-compose.yml`.
+
+**Snorql-UI Settings:**
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SNORQL_CONTAINER` | `my-snorql` | Docker container name |
+| `SNORQL_PORT` | `8088` | HTTP port for web interface |
+| `SNORQL_ENDPOINT` | `http://localhost:8890/sparql` | SPARQL endpoint URL (as seen from browser) |
+| `SNORQL_EXAMPLES_REPO` | - | GitHub repo with .rq example files |
+| `SNORQL_TITLE` | `My SPARQL Explorer` | Browser tab title |
+| `DEFAULT_GRAPH` | (empty) | Default RDF graph |
+
+**Virtuoso Settings:**
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `VIRTUOSO_CONTAINER` | `my-virtuoso` | Docker container name |
+| `VIRTUOSO_HOST` | `localhost` | Hostname for external connections |
+| `VIRTUOSO_HTTP_PORT` | `8890` | HTTP/SPARQL endpoint port |
+| `VIRTUOSO_ISQL_PORT` | `1111` | ISQL port for data loading |
+| `VIRTUOSO_USER` | `dba` | Database admin username |
+| `VIRTUOSO_PASSWORD` | `dba123` | Database admin password |
+| `SPARQL_UPDATE` | `false` | Allow SPARQL UPDATE queries |
+| `CORS_ORIGINS` | `*` | CORS allowed origins |
 
 ### URL Parameters
 
@@ -278,7 +333,7 @@ The script supports these environment variables:
 | `VIRTUOSO_PASSWORD` | `dba123` | Database password |
 | `CORS_ORIGINS` | `*` | Allowed origins (`*` = all) |
 
-For persistent configuration, edit `scripts/config.sh` instead of setting environment variables each time. Scripts will source this file automatically if present.
+For persistent configuration, set variables in your `.env` file. Shell scripts automatically read this file via `scripts/config.sh`.
 
 ### Verification
 
@@ -362,9 +417,10 @@ your-project/
 
 ### Quick Start
 
-1. **Copy the example configuration:**
+1. **Copy the example configuration files:**
    ```bash
    cp docker-compose.example.yml docker-compose.yml
+   cp .env.example .env
    ```
 
 2. **Create data directory and loader script:**
@@ -382,14 +438,15 @@ your-project/
 4. **Place your RDF data files in `db/data/`:**
    - Supported formats: Turtle (`.ttl`), RDF/XML (`.rdf`), N-Triples (`.nt`)
 
-5. **Configure `docker-compose.yml`:**
-   - Update `SNORQL_ENDPOINT` to match your setup
-   - Set `SNORQL_EXAMPLES_REPO` to your GitHub queries repository
-   - Set `SNORQL_TITLE` for your browser tab
+5. **Configure `.env` with your settings:**
+   - `SNORQL_ENDPOINT` - Your SPARQL endpoint URL
+   - `SNORQL_EXAMPLES_REPO` - Your GitHub queries repository
+   - `SNORQL_TITLE` - Browser tab title
+   - `VIRTUOSO_PASSWORD` - Secure password for production
 
 6. **Start the services:**
    ```bash
-   docker-compose up -d
+   docker compose up -d
    ```
 
 7. **Load your data into Virtuoso:**
@@ -406,10 +463,10 @@ your-project/
 
 - [ ] **Graph URI** in `db/data/load.sh` - Your named graph identifier
 - [ ] **Namespace prefixes** in `db/data/load.sh` - Add your domain-specific prefixes
-- [ ] **SNORQL_ENDPOINT** in `docker-compose.yml` - Your SPARQL endpoint URL
-- [ ] **SNORQL_EXAMPLES_REPO** in `docker-compose.yml` - Your GitHub queries repository
-- [ ] **SNORQL_TITLE** in `docker-compose.yml` - Browser tab title
-- [ ] **DBA_PASSWORD** in `docker-compose.yml` - Secure password for production
+- [ ] **SNORQL_ENDPOINT** in `.env` - Your SPARQL endpoint URL
+- [ ] **SNORQL_EXAMPLES_REPO** in `.env` - Your GitHub queries repository
+- [ ] **SNORQL_TITLE** in `.env` - Browser tab title
+- [ ] **VIRTUOSO_PASSWORD** in `.env` - Secure password for production
 - [ ] **Optional:** `assets/js/namespaces.js` - For UI prefix expansion in results
 
 ### Example: Minimal Custom Setup
@@ -421,6 +478,7 @@ cd my-sparql-ui
 
 # 2. Set up configuration
 cp docker-compose.example.yml docker-compose.yml
+cp .env.example .env
 mkdir -p db/data
 cp scripts/load.sh.template db/data/load.sh
 
@@ -432,13 +490,13 @@ cp scripts/load.sh.template db/data/load.sh
 # 4. Copy your data file
 cp /path/to/mydata.ttl db/data/
 
-# 5. Edit docker-compose.yml
+# 5. Edit .env
 #    Change: SNORQL_ENDPOINT=http://localhost:8890/sparql
 #    Change: SNORQL_EXAMPLES_REPO=https://github.com/myorg/sparql-queries
 #    Change: SNORQL_TITLE=My SPARQL Explorer
 
 # 6. Start and load
-docker-compose up -d
+docker compose up -d
 docker exec -it my-virtuoso /bin/bash -c "cd /database/data && ./load.sh load.log dba123"
 
 # 7. Access at http://localhost:8088
