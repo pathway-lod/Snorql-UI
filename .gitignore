@@ -1,8 +1,10 @@
 # Temporary files
 tmp/
+test-setup/
 
 # Environment files
 .env
+docker-compose.yml
 docker-compose.override.yml
 
 # IDE settings
