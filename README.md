@@ -403,6 +403,7 @@ your-project/
    ```bash
    docker compose up -d
    ```
+   Check if your docker `docker ps -a | grep plantmetwiki `
 
 7. **Load your data into Virtuoso:**
    ```bash
@@ -412,7 +413,7 @@ your-project/
    exit
    ```
 
-8. **Access the UI at http://localhost:8088**
+8. **Access the UI at http://localhost:8090**
 
 ### Customization Checklist
 
@@ -452,9 +453,14 @@ cp /path/to/mydata.ttl db/data/
 
 # 6. Start and load
 docker compose up -d
-docker exec -it my-virtuoso /bin/bash -c "cd /database/data && ./load.sh load.log dba123"
+docker exec -it plantmetwiki-virtuoso /bin/bash -c "cd /db/scripts && ./load.sh load.log plantmetwikipw"
 
-# 7. Access at http://localhost:8088
+# For stopping the services 
+docker compose down 
+# You need to enable CORS ones you have built 
+./scripts/enable-cors.sh
+
+# 7. Access at http://localhost:8011
 ```
 
 ### Automated Data Loading with Quality Control
@@ -494,3 +500,20 @@ Edit the script's CONFIGURATION section to set defaults for your deployment, the
 ## Locally Testing the UI for Development Purposes
 
 http://127.0.0.1:3000/plantwiki/Snorql-UI/
+
+# Simple Data Loading 
+
+```bash 
+# Rebuilds the image 
+./plantmetwiki-rebuild.sh 
+# Loading the new data 
+./plantmetwiki-upload-data.sh 
+```
+
+##  Changing the ports to the exposed ones for the URL 
+Port summary:
+```bash
+8900 → VIRTUOSO_HTTP_PORT : Virtuoso UI + SPARQL       (http://localhost:8900/sparql) 
+8088 → SNORQL_PORT : SNORQL user interface      (http://localhost:8088/)
+```
+
