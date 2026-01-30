@@ -1,0 +1,172 @@
+#!/bin/bash
+#
+# Virtuoso RDF Data Loader Script - Template
+#
+# Description: Generic loader script for loading RDF data into Virtuoso
+#              Customize this template for your own SPARQL endpoint.
+#
+# Usage: load.sh [log_file] [virtuoso_password]
+#
+# Setup:
+#   1. Copy this file to your data directory: db/data/load.sh
+#   2. Customize the GRAPH_URI and namespace prefixes below
+#   3. Place your RDF files (*.ttl, *.rdf, *.nt) in the same directory
+#   4. Run from within the Virtuoso container
+#
+# Example:
+#   docker exec -it my-virtuoso /bin/bash
+#   cd /database/data
+#   ./load.sh load.log dba123
+#
+
+# =============================================================================
+# CONFIGURATION - Customize these settings for your endpoint
+# =============================================================================
+
+# The named graph URI where your data will be loaded
+# Change this to match your domain/project
+GRAPH_URI="http://example.org/graph/"
+
+# Your RDF data file(s) - update these to match your actual files
+# Supports: *.ttl (Turtle), *.rdf (RDF/XML), *.nt (N-Triples)
+DATA_FILE="YourData.ttl"
+
+# Optional: Service description file (VoID metadata)
+# Set to empty string if not using: SERVICE_DESC_FILE=""
+SERVICE_DESC_FILE=""
+
+# =============================================================================
+# NAMESPACE PREFIXES - Add your domain-specific prefixes here
+# =============================================================================
+# Format: DB.DBA.XML_SET_NS_DECL ('prefix', 'namespace_uri', 2);
+#
+# Common prefixes (uncomment as needed):
+#   rdf, rdfs, owl, xsd     - W3C standards
+#   foaf, dc, dcterms       - Dublin Core / FOAF
+#   skos, prov, void        - SKOS / Provenance / VoID
+#
+# Add your domain-specific prefixes below the common ones.
+# =============================================================================
+
+define_namespaces() {
+    # --- W3C Standard Prefixes ---
+    echo "DB.DBA.XML_SET_NS_DECL ('rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#', 2);"
+    echo "DB.DBA.XML_SET_NS_DECL ('rdfs', 'http://www.w3.org/2000/01/rdf-schema#', 2);"
+    echo "DB.DBA.XML_SET_NS_DECL ('owl', 'http://www.w3.org/2002/07/owl#', 2);"
+    echo "DB.DBA.XML_SET_NS_DECL ('xsd', 'http://www.w3.org/2001/XMLSchema#', 2);"
+    echo "DB.DBA.XML_SET_NS_DECL ('xml', 'http://www.w3.org/XML/1998/namespace', 2);"
+
+    # --- Common Metadata Prefixes ---
+    echo "DB.DBA.XML_SET_NS_DECL ('dc', 'http://purl.org/dc/elements/1.1/', 2);"
+    echo "DB.DBA.XML_SET_NS_DECL ('dcterms', 'http://purl.org/dc/terms/', 2);"
+    echo "DB.DBA.XML_SET_NS_DECL ('foaf', 'http://xmlns.com/foaf/0.1/', 2);"
+    echo "DB.DBA.XML_SET_NS_DECL ('skos', 'http://www.w3.org/2004/02/skos/core#', 2);"
+    echo "DB.DBA.XML_SET_NS_DECL ('prov', 'http://www.w3.org/ns/prov#', 2);"
+    echo "DB.DBA.XML_SET_NS_DECL ('void', 'http://rdfs.org/ns/void#', 2);"
+
+    # --- Your Domain-Specific Prefixes ---
+    # Add your custom prefixes here. Examples:
+    #
+    # echo "DB.DBA.XML_SET_NS_DECL ('ex', 'http://example.org/', 2);"
+    # echo "DB.DBA.XML_SET_NS_DECL ('myonto', 'http://example.org/ontology#', 2);"
+    # echo "DB.DBA.XML_SET_NS_DECL ('mydata', 'http://example.org/data/', 2);"
+    #
+    # If using external identifiers, add their prefixes:
+    # echo "DB.DBA.XML_SET_NS_DECL ('wikidata', 'http://www.wikidata.org/entity/', 2);"
+    # echo "DB.DBA.XML_SET_NS_DECL ('pubmed', 'http://www.ncbi.nlm.nih.gov/pubmed/', 2);"
+}
+
+# =============================================================================
+# SCRIPT LOGIC - Usually no changes needed below this line
+# =============================================================================
+
+# Get input arguments
+args=("$@")
+
+if [ $# -ne 2 ]; then
+    echo "Usage: load.sh [log_file] [virtuoso_password]"
+    echo ""
+    echo "Arguments:"
+    echo "  log_file           Output log file (e.g., load.log)"
+    echo "  virtuoso_password  Virtuoso DBA password"
+    echo ""
+    echo "Example:"
+    echo "  ./load.sh load.log dba123"
+    exit 1
+fi
+
+VAD=data
+LOGFILE=${args[0]}
+VIRT_PSWD=${args[1]}
+
+# Status message
+echo "Loading RDF data into graph: ${GRAPH_URI}"
+echo "Data file: ${DATA_FILE}"
+[ -n "${SERVICE_DESC_FILE}" ] && echo "Service description: ${SERVICE_DESC_FILE}"
+
+# Log into Virtuoso isql env
+isql_cmd="isql -U dba -P $VIRT_PSWD"
+
+# Build namespace prefix commands
+NAMESPACE_CMDS=$(define_namespaces)
+
+# Build the Virtuoso commands
+cat << 'SQLEOF' > /tmp/load_commands.sql
+-- Reset RDF store (WARNING: removes all existing data!)
+RDF_GLOBAL_RESET();
+SQLEOF
+
+# Add cleanup for our graph
+echo "DELETE FROM load_list WHERE ll_graph = '${GRAPH_URI}';" >> /tmp/load_commands.sql
+[ -n "${SERVICE_DESC_FILE}" ] && echo "DELETE FROM load_list WHERE ll_graph = 'servicedescription';" >> /tmp/load_commands.sql
+
+# Add log_enable for bulk loading
+echo "log_enable(2);" >> /tmp/load_commands.sql
+
+# Add namespace prefix declarations
+echo "${NAMESPACE_CMDS}" >> /tmp/load_commands.sql
+
+# Re-enable logging
+echo "log_enable(1);" >> /tmp/load_commands.sql
+
+# Grant SPARQL permissions for federated queries
+echo "grant select on \"DB.DBA.SPARQL_SINV_2\" to \"SPARQL\";" >> /tmp/load_commands.sql
+echo "grant execute on \"DB.DBA.SPARQL_SINV_IMP\" to \"SPARQL\";" >> /tmp/load_commands.sql
+
+# Add load commands
+echo "ld_dir('${VAD}', '${DATA_FILE}', '${GRAPH_URI}');" >> /tmp/load_commands.sql
+[ -n "${SERVICE_DESC_FILE}" ] && echo "ld_dir('${VAD}', '${SERVICE_DESC_FILE}', 'servicedescription');" >> /tmp/load_commands.sql
+
+# Run the loader and show results
+echo "rdf_loader_run();" >> /tmp/load_commands.sql
+echo "select * from DB.DBA.load_list;" >> /tmp/load_commands.sql
+echo "exit;" >> /tmp/load_commands.sql
+
+# Execute the commands
+${isql_cmd} < /tmp/load_commands.sql &> ${LOGFILE}
+
+# Append command summary to log
+echo "----------" >> ${LOGFILE}
+echo "Graph URI: ${GRAPH_URI}" >> ${LOGFILE}
+echo "Data file: ${DATA_FILE}" >> ${LOGFILE}
+[ -n "${SERVICE_DESC_FILE}" ] && echo "Service desc: ${SERVICE_DESC_FILE}" >> ${LOGFILE}
+echo "----------" >> ${LOGFILE}
+
+# Print the log
+cat ${LOGFILE}
+
+result=$?
+
+if [ $result != 0 ]; then
+    echo ""
+    echo "Failed to load! Check ${LOGFILE} for details."
+    exit 1
+fi
+
+# Cleanup
+rm -f /tmp/load_commands.sql
+
+# Status message
+echo ""
+echo "Loading finished! Check ${LOGFILE} for details."
+exit 0

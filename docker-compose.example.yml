@@ -1,0 +1,83 @@
+# Snorql-UI Docker Compose Example
+# ================================
+# Copy this file to docker-compose.yml and optionally create a .env file
+# for custom configuration.
+#
+# Usage (basic):
+#   cp docker-compose.example.yml docker-compose.yml
+#   docker compose up -d
+#
+# Usage (with .env configuration):
+#   cp docker-compose.example.yml docker-compose.yml
+#   cp .env.example .env
+#   # Edit .env with your settings
+#   docker compose up -d
+#
+# Services:
+#   - virtuoso: OpenLink Virtuoso SPARQL endpoint (optional, remove if using external endpoint)
+#   - snorql: Snorql-UI web interface
+
+services:
+  # ---------------------------------------------------------------------------
+  # Virtuoso SPARQL Endpoint (Optional)
+  # ---------------------------------------------------------------------------
+  # Remove this service if you're connecting to an external SPARQL endpoint.
+  # If using this service, load your RDF data into Virtuoso after startup.
+  # See scripts/load-rdf-example.sh for data loading instructions.
+  #
+  # IMPORTANT: Enable CORS after Virtuoso starts (required for browser queries):
+  #   ./scripts/enable-cors.sh
+  #
+  # For production, restrict CORS to specific origins:
+  #   CORS_ORIGINS="http://yourdomain.com" ./scripts/enable-cors.sh
+  virtuoso:
+    image: openlink/virtuoso-opensource-7:7.2.11
+    restart: always
+    container_name: ${VIRTUOSO_CONTAINER:-my-virtuoso}
+    # Uncomment to persist Virtuoso database and enable data loading:
+    # volumes:
+    #   - ./db:/database  # Create directory first: mkdir -p db/data
+    environment:
+      # Database administrator password (change in production!)
+      - DBA_PASSWORD=${VIRTUOSO_PASSWORD:-dba123}
+      # Set to 'true' to allow SPARQL UPDATE queries
+      - SPARQL_UPDATE=${SPARQL_UPDATE:-false}
+    ports:
+      # Virtuoso HTTP interface and SPARQL endpoint
+      - "${VIRTUOSO_HTTP_PORT:-8890}:8890"
+      # Virtuoso ISQL interface (for data loading)
+      - "${VIRTUOSO_ISQL_PORT:-1111}:1111"
+
+  # ---------------------------------------------------------------------------
+  # Snorql-UI Web Interface
+  # ---------------------------------------------------------------------------
+  snorql:
+    build: .
+    restart: always
+    container_name: ${SNORQL_CONTAINER:-my-snorql}
+    # Uncomment to use local files for development:
+    # volumes:
+    #   - ./:/usr/local/apache2/htdocs
+    environment:
+      # SPARQL endpoint URL (as seen from the browser, not container)
+      # Use localhost if running Virtuoso locally, or your external endpoint URL
+      - SNORQL_ENDPOINT=${SNORQL_ENDPOINT:-http://localhost:8890/sparql}
+
+      # GitHub repository containing .rq example files
+      # Standard repo: https://github.com/owner/repo
+      # Subfolder: https://api.github.com/repos/owner/repo/contents/folder
+      - SNORQL_EXAMPLES_REPO=${SNORQL_EXAMPLES_REPO:-https://github.com/your-org/your-sparql-queries}
+
+      # Browser tab title
+      - SNORQL_TITLE=${SNORQL_TITLE:-My SPARQL Explorer}
+
+      # Default RDF graph (leave empty for default behavior)
+      - DEFAULT_GRAPH=${DEFAULT_GRAPH:-}
+    ports:
+      # Snorql web interface
+      - "${SNORQL_PORT:-8088}:80"
+      # HTTPS (optional, requires SSL configuration)
+      - "${SNORQL_HTTPS_PORT:-8443}:443"
+    # If using the Virtuoso service above, uncomment to ensure proper startup order:
+    # depends_on:
+    #   - virtuoso
