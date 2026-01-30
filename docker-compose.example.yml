@@ -35,8 +35,8 @@ services:
     restart: always
     container_name: ${VIRTUOSO_CONTAINER:-my-virtuoso}
     # Uncomment to persist Virtuoso database and enable data loading:
-    volumes:
-       - ./db:/database  # Create directory first: mkdir -p db/data
+    # volumes:
+    #   - ./db:/database  # Create directory first: mkdir -p db/data
     environment:
       # Database administrator password (change in production!)
       - DBA_PASSWORD=${VIRTUOSO_PASSWORD:-dba123}

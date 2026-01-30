@@ -1,0 +1,49 @@
+# Temporary files
+tmp/
+test-setup/
+
+# Environment files
+.env
+docker-compose.override.yml
+
+# IDE settings
+.idea/
+.vscode/
+*.swp
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker data directories
+virtuoso-data/
+
+# Log files
+*.log
+
+# Local production overrides
+docker-compose.local.yml
+*.env.local
+
+# WikiPathways production configs (contain ports/passwords)
+docker-compose.wikipathways.yml
+docker-compose.wikipathways-ep2.yml
+scripts/wikipathways-loader.sh
+
+# Virtuoso database files and user data
+# These directories contain database files and RDF data - never commit
+db/
+db2/
+ep2-local/
+snorql-extended/
+
+# User RDF data files (if placed elsewhere)
+*.ttl
+*.rdf
+*.nt
+*.nq
+
+# Keep specific files tracked (override above patterns)
+!scripts/load.sh.template
+!scripts/load-rdf-example.sh
