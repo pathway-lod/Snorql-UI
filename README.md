@@ -511,7 +511,7 @@ http://127.0.0.1:3000/plantwiki/Snorql-UI/
 ```
 
 ##  Changing the ports to the exposed ones for the URL 
-Port summary:
+Port summary: change them in the .env file 
 ```bash
 8900 → VIRTUOSO_HTTP_PORT : Virtuoso UI + SPARQL       (http://localhost:8900/sparql) 
 8088 → SNORQL_PORT : SNORQL user interface      (http://localhost:8088/)
