@@ -29,8 +29,8 @@ case "$cmd" in
     ./scripts/enable-cors.sh
 
     echo "🎉 Setup complete."
-    echo "  Snorql UI:  http://localhost:${SNORQL_PORT}"
-    echo "  Virtuoso:   http://localhost:${VIRTUOSO_HTTP_PORT}/sparql"
+    echo "  Snorql UI (local):  http://localhost:${SNORQL_PORT}"
+    echo "  Virtuoso (local):   http://localhost:${VIRTUOSO_HTTP_PORT}/sparql"
     ;;
 
   down)

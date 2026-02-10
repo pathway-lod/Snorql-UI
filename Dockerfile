@@ -22,4 +22,10 @@ COPY ./entrypoint.sh /app/entrypoint.sh
 RUN chmod 755 /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
+# Copy proxy configuration for /sparql -> Virtuoso
+COPY ./httpd-proxy.conf /usr/local/apache2/conf/extra/httpd-proxy.conf
+ 
+# Include proxy config in main httpd.conf
+RUN echo "Include conf/extra/httpd-proxy.conf" >> /usr/local/apache2/conf/httpd.conf
+
 ENTRYPOINT ["/app/entrypoint.sh"]
