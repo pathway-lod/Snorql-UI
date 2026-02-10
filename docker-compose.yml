@@ -55,6 +55,10 @@ services:
     build: .
     restart: always
     container_name: ${SNORQL_CONTAINER:-my-snorql}
+    depends_on:
+      # makes sure that SNORQL starts after Virtuoso (if used)
+      - virtuoso
+
     # Uncomment to use local files for development:
     # volumes:
     #   - ./:/usr/local/apache2/htdocs

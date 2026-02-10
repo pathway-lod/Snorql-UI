@@ -510,10 +510,18 @@ http://127.0.0.1:3000/plantwiki/Snorql-UI/
 ./plantmetwiki-upload-data.sh 
 ```
 
+## Deploying Production Hostnames for PlantMetWiki
+
+Public UI:
+`https://plantmetwiki.bioinformatics.nl` → container port 8088
+
+Public SPARQL endpoint:
+`https://plantmetwiki.bioinformatics.nl/sparql` → container port 8890
+
 ##  Changing the ports to the exposed ones for the URL 
 Port summary: change them in the .env file 
 ```bash
-8900 → VIRTUOSO_HTTP_PORT : Virtuoso UI + SPARQL       (http://localhost:8900/sparql) 
+8890 → VIRTUOSO_HTTP_PORT : Virtuoso UI + SPARQL       (http://localhost:8890/sparql) 
 8088 → SNORQL_PORT : SNORQL user interface      (http://localhost:8088/)
 ```
 
