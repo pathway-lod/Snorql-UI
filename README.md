@@ -526,3 +526,9 @@ Port summary: change them in the .env file
 8088 → SNORQL_PORT : SNORQL user interface      (http://localhost:8088/)
 ```
 
+## Uploading other graphs from external resources 
+
+### NCBI taxonomy graph 
+
+- Download OWL file from the https://obofoundry.org/ontology/ncbitaxon.html 
+- Adapt the `plantmetwiki-upload-data.sh` to load also the NCBI OWL

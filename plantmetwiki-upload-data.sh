@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
+
+# Script to upload PlantMetWiki RDF data into Virtuoso for use in Snorql-UI
+
 set -euo pipefail
+
+# --------------------------------------------------
+# Resolve repository root
+# --------------------------------------------------
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "${SCRIPT_DIR}"
 
 # --------------------------------------------------
 # Load environment variables from .env
@@ -35,15 +44,41 @@ if [ -t 0 ] && [ -t 1 ]; then
 fi
 
 # --------------------------------------------------
-# Run loader
+# Run core PlantMetWiki loader
 # --------------------------------------------------
-echo "📦 Loading RDF into Virtuoso..."
+echo "📦 Loading core PlantMetWiki RDF into Virtuoso..."
 echo "  Container : ${VIRTUOSO_CONTAINER}"
 echo "  Directory : ${LOAD_DIR}"
 echo "  Script    : ${LOAD_SCRIPT}"
 
 docker exec "${DOCKER_EXEC_FLAGS[@]}" "${VIRTUOSO_CONTAINER}" /bin/bash -lc \
   "cd '${LOAD_DIR}' && ${LOAD_SCRIPT} '${LOAD_LOG}' '${VIRTUOSO_PASSWORD}'"
+
+# --------------------------------------------------
+# Optional: Load NCBITaxon graph
+# --------------------------------------------------
+if [ "${LOAD_NCBITAXON:-false}" = "true" ]; then
+  echo
+  echo "🌿 Loading NCBITaxon graph..."
+
+  NCBITAXON_LOADER="${SCRIPT_DIR}/scripts/load-graphs/load-ncbitaxon.sh"
+
+  if [ ! -x "${NCBITAXON_LOADER}" ]; then
+    echo "❌ NCBITaxon loader not found or not executable:"
+    echo "   ${NCBITAXON_LOADER}"
+    echo
+    echo "Fix with:"
+    echo "   chmod +x scripts/load-graphs/load-ncbitaxon.sh"
+    exit 1
+  fi
+
+  "${NCBITAXON_LOADER}"
+else
+  echo
+  echo "ℹ️ Skipping NCBITaxon graph load."
+  echo "   To enable:"
+  echo "   LOAD_NCBITAXON=true ./plantmetwiki-upload-data.sh"
+fi
 
 # --------------------------------------------------
 # Friendly output
@@ -65,4 +100,9 @@ fi
 if [ -n "${DEFAULT_GRAPH:-}" ]; then
   echo "📦 Default graph:"
   echo "   ${DEFAULT_GRAPH}"
+fi
+
+if [ "${LOAD_NCBITAXON:-false}" = "true" ] && [ -n "${NCBITAXON_GRAPH_URI:-}" ]; then
+  echo "🌿 NCBITaxon graph:"
+  echo "   ${NCBITAXON_GRAPH_URI}"
 fi
