@@ -2,7 +2,7 @@
 tmp/
 test-setup/
 
-# Environment files
+# Environment files : do not commit local env file 
 .env
 docker-compose.override.yml
 
@@ -48,6 +48,4 @@ snorql-extended/
 !scripts/load.sh.template
 !scripts/load-rdf-example.sh
 
-# Do not commit the local docker-compose.yml 
-docker-compose.yml
 
