@@ -76,7 +76,7 @@ services:
       - SNORQL_TITLE=${SNORQL_TITLE:-My SPARQL Explorer}
 
       # Default RDF graph (leave empty for default behavior)
-      - DEFAULT_GRAPH=${DEFAULT_GRAPH:-}
+      # - DEFAULT_GRAPH=${DEFAULT_GRAPH:-}
     ports:
       # Snorql web interface
       - "${SNORQL_PORT:-8088}:80"

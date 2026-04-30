@@ -2,7 +2,7 @@
 tmp/
 test-setup/
 
-# Environment files
+# Environment files : do not commit local env file 
 .env
 docker-compose.override.yml
 
@@ -47,3 +47,5 @@ snorql-extended/
 # Keep specific files tracked (override above patterns)
 !scripts/load.sh.template
 !scripts/load-rdf-example.sh
+
+

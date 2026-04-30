@@ -373,17 +373,18 @@ your-project/
 ### Quick Start
 
 1. **Copy the example configuration files:**
-   ```bash
+   
+```bash
    cp docker-compose.example.yml docker-compose.yml
    cp .env.example .env
-   ```
+```
 
 2. **Create data directory and loader script:**
-   ```bash
+```bash
    mkdir -p db/data
    cp scripts/load.sh.template db/data/load.sh
    chmod +x db/data/load.sh
-   ```
+```
 
 3. **Customize the loader script (`db/data/load.sh`):**
    - Set `GRAPH_URI` to your named graph (e.g., `http://yourdomain.org/data/`)
@@ -501,7 +502,7 @@ Edit the script's CONFIGURATION section to set defaults for your deployment, the
 
 http://127.0.0.1:3000/plantwiki/Snorql-UI/
 
-# Simple Data Loading 
+# Simple Data Loading for PlantMetWiki
 
 ```bash 
 # Rebuilds the image 
