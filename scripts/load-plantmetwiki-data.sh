@@ -154,16 +154,16 @@ fi
 if [[ "$CLEAR_GRAPHS" == true ]]; then
   echo ""
   echo "── Clearing existing graphs ───────────────────────────────────────────"
-  # Deduplicate by collecting unique graph URIs from get_graph()
-  declare -A _seen_graphs
-  for fname in "${LOAD_ORDER[@]}"; do
-    g="$(get_graph "$fname")"
-    if [[ -n "$g" && -z "${_seen_graphs[$g]+x}" ]]; then
-      clear_graph "$g"
-      _seen_graphs[$g]=1
-    fi
+  for graph in \
+    "${BASE_GRAPH}/graph/pathways" \
+    "${BASE_GRAPH}/graph/gpml-taxonomy-extra" \
+    "${BASE_GRAPH}/graph/gpml-properties-extra" \
+    "${BASE_GRAPH}/graph/ncbi-iri-mappings" \
+    "${BASE_GRAPH}/graph/bgc-plantismash" \
+    "${BASE_GRAPH}/graph/bgc-mibig" \
+    "${BASE_GRAPH}/void"; do
+    clear_graph "$graph"
   done
-  unset _seen_graphs
 fi
 
 echo ""
