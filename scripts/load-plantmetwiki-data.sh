@@ -79,11 +79,12 @@ load_file() {
   echo "  Loading $fname  (${size_mb} MB) → <${graph}>"
 
   # Copy file into container's database dir and use bulk loader
-  docker cp "$fpath" "${VIRTUOSO_CONTAINER}:/database/data/${fname}"
+  # Copy to /tmp inside container (/tmp is always in Virtuoso DirsAllowed)
+  docker cp "$fpath" "${VIRTUOSO_CONTAINER}:/tmp/${fname}"
 
   isql <<EOF
 -- Register the file for bulk loading
-ld_dir('/database/data', '${fname}', '${graph}');
+ld_dir('/tmp', '${fname}', '${graph}');
 
 -- Run the bulk loader
 rdf_loader_run();
@@ -92,13 +93,13 @@ rdf_loader_run();
 checkpoint;
 
 -- Clean up the load list entry
-DELETE FROM DB.DBA.LOAD_LIST WHERE ll_file = '/database/data/${fname}';
+DELETE FROM DB.DBA.LOAD_LIST WHERE ll_file = '/tmp/${fname}';
 
 quit;
 EOF
 
   # Remove file from container after loading
-  docker exec "$VIRTUOSO_CONTAINER" rm -f "/database/data/${fname}"
+  docker exec "$VIRTUOSO_CONTAINER" rm -f "/tmp/${fname}"
   echo "    ✔ Done"
 }
 
