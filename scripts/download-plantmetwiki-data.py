@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """Download the latest PlantMetWiki RDF data from Zenodo and GitHub releases.
 
+NOTE: This script downloads from Zenodo, which may lag behind the latest
+local pipeline run. If you have a more recent local build in
+gpml-to-rdf/output/bundles/, use those instead — they will be larger
+and include fixes not yet uploaded to Zenodo.
+
 Downloads two datasets:
   1. Pathway RDF (gpml-to-rdf) from Zenodo 10.5281/zenodo.17967619
        all-*.ttl.gz                          → core pathway + reactions RDF

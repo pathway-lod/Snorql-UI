@@ -154,9 +154,16 @@ fi
 if [[ "$CLEAR_GRAPHS" == true ]]; then
   echo ""
   echo "── Clearing existing graphs ───────────────────────────────────────────"
-  for graph in "${FILE_GRAPH_MAP[@]}"; do
-    clear_graph "$graph"
-  done | sort -u   # deduplicate void graph
+  # Deduplicate by collecting unique graph URIs from get_graph()
+  declare -A _seen_graphs
+  for fname in "${LOAD_ORDER[@]}"; do
+    g="$(get_graph "$fname")"
+    if [[ -n "$g" && -z "${_seen_graphs[$g]+x}" ]]; then
+      clear_graph "$g"
+      _seen_graphs[$g]=1
+    fi
+  done
+  unset _seen_graphs
 fi
 
 echo ""
