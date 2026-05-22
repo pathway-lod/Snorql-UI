@@ -79,11 +79,11 @@ load_file() {
   echo "  Loading $fname  (${size_mb} MB) → <${graph}>"
 
   # Copy file into container's database dir and use bulk loader
-  docker cp "$fpath" "${VIRTUOSO_CONTAINER}:/database/${fname}"
+  docker cp "$fpath" "${VIRTUOSO_CONTAINER}:/database/data/${fname}"
 
   isql <<EOF
 -- Register the file for bulk loading
-ld_dir('/database', '${fname}', '${graph}');
+ld_dir('/database/data', '${fname}', '${graph}');
 
 -- Run the bulk loader
 rdf_loader_run();
@@ -92,13 +92,13 @@ rdf_loader_run();
 checkpoint;
 
 -- Clean up the load list entry
-DELETE FROM DB.DBA.LOAD_LIST WHERE ll_file = '/database/${fname}';
+DELETE FROM DB.DBA.LOAD_LIST WHERE ll_file = '/database/data/${fname}';
 
 quit;
 EOF
 
   # Remove file from container after loading
-  docker exec "$VIRTUOSO_CONTAINER" rm -f "/database/${fname}"
+  docker exec "$VIRTUOSO_CONTAINER" rm -f "/database/data/${fname}"
   echo "    ✔ Done"
 }
 
@@ -116,19 +116,20 @@ EOF
 }
 
 # ── File → graph mapping ──────────────────────────────────────────────────────
-
-declare -A FILE_GRAPH_MAP=(
-  # Pathway core RDF (largest file — loads last)
-  ["all_gpml_taxonomy_extra-plantcyc17.0.0-gpml2021.ttl"]="${BASE_GRAPH}/graph/gpml-taxonomy-extra"
-  ["all_gpml_properties_extra-plantcyc17.0.0-gpml2021.ttl"]="${BASE_GRAPH}/graph/gpml-properties-extra"
-  ["ncbi_iri_mappings-plantcyc17.0.0-gpml2021.ttl"]="${BASE_GRAPH}/graph/ncbi-iri-mappings"
-  ["void-plantcyc17.0.0-gpml2021.ttl"]="${BASE_GRAPH}/void"
-  ["all-plantcyc17.0.0-gpml2021.ttl"]="${BASE_GRAPH}/graph/pathways"
-  # BGC crosslinks
-  ["plantismash.ttl"]="${BASE_GRAPH}/graph/bgc-plantismash"
-  ["mibig.ttl"]="${BASE_GRAPH}/graph/bgc-mibig"
-  ["void-bgc.ttl"]="${BASE_GRAPH}/void"
-)
+# Returns the named graph for a given filename.
+get_graph() {
+  local fname="$1"
+  case "$fname" in
+    all-*.ttl)                       echo "${BASE_GRAPH}/graph/pathways" ;;
+    all_gpml_taxonomy_extra-*.ttl)   echo "${BASE_GRAPH}/graph/gpml-taxonomy-extra" ;;
+    all_gpml_properties_extra-*.ttl) echo "${BASE_GRAPH}/graph/gpml-properties-extra" ;;
+    ncbi_iri_mappings-*.ttl)         echo "${BASE_GRAPH}/graph/ncbi-iri-mappings" ;;
+    void-*.ttl)                      echo "${BASE_GRAPH}/void" ;;
+    plantismash.ttl)                 echo "${BASE_GRAPH}/graph/bgc-plantismash" ;;
+    mibig.ttl)                       echo "${BASE_GRAPH}/graph/bgc-mibig" ;;
+    *) echo "" ;;
+  esac
+}
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
@@ -140,6 +141,9 @@ echo " Data dir:  $DATA_DIR"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 check_virtuoso
+
+# Ensure /database/data exists inside the container
+docker exec "$VIRTUOSO_CONTAINER" mkdir -p /database/data
 
 if [[ "$CHECK_ONLY" == true ]]; then
   check_graphs
@@ -170,7 +174,7 @@ LOAD_ORDER=(
 )
 
 for fname in "${LOAD_ORDER[@]}"; do
-  graph="${FILE_GRAPH_MAP[$fname]:-}"
+  graph="$(get_graph "$fname")"
   if [[ -z "$graph" ]]; then continue; fi
   load_file "$fname" "$graph"
 done

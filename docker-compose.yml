@@ -42,6 +42,8 @@ services:
       - DBA_PASSWORD=${VIRTUOSO_PASSWORD:-dba123}
       # Set to 'true' to allow SPARQL UPDATE queries
       - SPARQL_UPDATE=${SPARQL_UPDATE:-false}
+      # Allow bulk loading from /database/data (required for ld_dir() in load scripts)
+      - VIRT_Database_DirsAllowed=/database,/database/data,/tmp,/opt/virtuoso-opensource/share/virtuoso/vad
     ports:
       # Virtuoso HTTP interface and SPARQL endpoint
       - "${VIRTUOSO_HTTP_PORT:-8890}:8890"
