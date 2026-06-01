@@ -616,6 +616,74 @@ python scripts/download-plantmetwiki-data.py           # fetch latest
 bash scripts/load-plantmetwiki-data.sh --clear         # rebuild graphs in Virtuoso
 ```
 
+### Optional: load the NCBITaxon ontology
+
+To resolve NCBI Taxonomy URIs (`NCBITaxon_<id>`) locally — for label lookups and reasoning without a federated query to BioPortal — load the OBO Foundry release of NCBITaxon into a dedicated graph.
+
+We use OBO Foundry rather than BioPortal because the **OBO version is CC0** (public domain), while BioPortal mirrors are not freely redistributable.
+
+```bash
+# Full release (~1.3 GB, several minutes to load):
+bash scripts/load-graphs/load-ncbitaxon.sh
+
+# Or a much smaller subset if you don't need every taxon:
+bash scripts/load-graphs/load-ncbitaxon.sh --subset taxslim
+bash scripts/load-graphs/load-ncbitaxon.sh --subset taxslim-disjoint
+
+# Check what's loaded:
+bash scripts/load-graphs/load-ncbitaxon.sh --check
+```
+
+Or load NCBITaxon together with the rest of the data:
+
+```bash
+LOAD_NCBITAXON=true bash scripts/load-plantmetwiki-data.sh
+LOAD_NCBITAXON=true NCBITAXON_SUBSET=taxslim bash scripts/load-plantmetwiki-data.sh
+```
+
+The ontology is loaded into:
+```
+http://rdf-plantmetwiki.bioinformatics.nl/graph/ncbitaxon
+```
+
+Verify with a label lookup:
+
+```sparql
+PREFIX ncbi: <http://purl.obolibrary.org/obo/NCBITaxon_>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?label WHERE {
+  GRAPH <http://rdf-plantmetwiki.bioinformatics.nl/graph/ncbitaxon> {
+    ncbi:33090 rdfs:label ?label .
+  }
+}
+```
+
+Cross-graph join (pathway taxa → NCBI labels):
+
+```sparql
+PREFIX wp:   <http://vocabularies.wikipathways.org/wp#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?taxon ?label (COUNT(DISTINCT ?pwy) AS ?n)
+WHERE {
+  GRAPH <http://rdf-plantmetwiki.bioinformatics.nl/graph/gpml-taxonomy-extra> {
+    ?pwy wp:organism ?taxon .
+  }
+  GRAPH <http://rdf-plantmetwiki.bioinformatics.nl/graph/ncbitaxon> {
+    ?taxon rdfs:label ?label .
+  }
+}
+GROUP BY ?taxon ?label
+ORDER BY DESC(?n)
+```
+
+| Variant | Triples | Recommended for |
+|---|---|---|
+| `full` | ~50 M | Production / full label coverage |
+| `taxslim` | ~500 K | Local dev — labels for major taxa |
+| `taxslim-disjoint` | ~500 K + axioms | Reasoning experiments |
+
 ### Legacy data loading (kept for compatibility)
 
 The older container-rebuild flow is still present:

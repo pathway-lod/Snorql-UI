@@ -169,23 +169,45 @@ fi
 echo ""
 echo "── Loading files ──────────────────────────────────────────────────────"
 
-# Load in order: small files first, large core last
-LOAD_ORDER=(
-  "void-plantcyc17.0.0-gpml2021.ttl"
-  "void-bgc.ttl"
-  "ncbi_iri_mappings-plantcyc17.0.0-gpml2021.ttl"
-  "all_gpml_taxonomy_extra-plantcyc17.0.0-gpml2021.ttl"
-  "plantismash.ttl"
-  "mibig.ttl"
-  "all_gpml_properties_extra-plantcyc17.0.0-gpml2021.ttl"
-  "all-plantcyc17.0.0-gpml2021.ttl"   # largest — load last
-)
+# Load in order: small files first, large core last.
+# Use shell globs so the script picks up whichever version of the
+# gpml-to-rdf bundles is currently in db/data/ (e.g. -v2.ttl, or a
+# future -v3.ttl) without needing to be edited every release.
 
-for fname in "${LOAD_ORDER[@]}"; do
+shopt -s nullglob
+SMALL_GLOBS=(
+  "$DATA_DIR"/void-plantcyc*.ttl
+  "$DATA_DIR"/void-bgc.ttl
+  "$DATA_DIR"/all_gpml_taxonomy_extra-plantcyc*.ttl
+  "$DATA_DIR"/plantismash.ttl
+  "$DATA_DIR"/mibig.ttl
+)
+LARGE_GLOBS=(
+  "$DATA_DIR"/all_gpml_properties_extra-plantcyc*.ttl
+  "$DATA_DIR"/all-plantcyc*.ttl                       # core — load last
+)
+shopt -u nullglob
+
+for fpath in "${SMALL_GLOBS[@]}" "${LARGE_GLOBS[@]}"; do
+  fname="$(basename "$fpath")"
   graph="$(get_graph "$fname")"
   if [[ -z "$graph" ]]; then continue; fi
   load_file "$fname" "$graph"
 done
+
+# ── Optional: load NCBITaxon ontology ────────────────────────────────────────
+# Enable by setting LOAD_NCBITAXON=true (and optionally NCBITAXON_SUBSET=taxslim)
+if [[ "${LOAD_NCBITAXON:-false}" == "true" ]]; then
+  echo ""
+  echo "── Loading NCBITaxon ontology ─────────────────────────────────────────"
+  subset="${NCBITAXON_SUBSET:-full}"
+  "${SCRIPT_DIR}/load-graphs/load-ncbitaxon.sh" --subset "$subset"
+else
+  echo ""
+  echo "ℹ  Skipping NCBITaxon graph. To load it:"
+  echo "    LOAD_NCBITAXON=true bash scripts/load-plantmetwiki-data.sh"
+  echo "    LOAD_NCBITAXON=true NCBITAXON_SUBSET=taxslim bash scripts/load-plantmetwiki-data.sh"
+fi
 
 echo ""
 echo "── Enabling SPARQL federation grants ─────────────────────────────────"
