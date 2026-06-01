@@ -498,18 +498,134 @@ Edit the script's CONFIGURATION section to set defaults for your deployment, the
 - **Namespace prefixes:** Also update `assets/js/namespaces.js` so URIs display as compact QNames in the UI
 
 
-## Locally Testing the UI for Development Purposes
+## Local Development Workflow for PlantMetWiki
 
-http://127.0.0.1:3000/plantwiki/Snorql-UI/
+A complete local stack — Snorql-UI served from your machine, with a local Virtuoso loaded with the latest PlantMetWiki RDF — is provided through three scripts in `scripts/`:
 
-# Simple Data Loading for PlantMetWiki
-
-```bash 
-# Rebuilds the image 
-./plantmetwiki-rebuild.sh 
-# Loading the new data 
-./plantmetwiki-upload-data.sh 
 ```
+scripts/download-plantmetwiki-data.py   # fetch latest TTLs from Zenodo
+scripts/load-plantmetwiki-data.sh       # bulk-load TTLs into local Virtuoso
+scripts/local-dev.sh                    # serve the UI without Docker
+```
+
+### Step 1 — Configure `.env`
+
+Copy `.env.example` to `.env` and verify the variables match your local setup. The defaults work out of the box:
+
+```bash
+cp .env.example .env
+```
+
+Key values for local development:
+```
+SNORQL_ENDPOINT=http://localhost:8890/sparql   # local Virtuoso
+SNORQL_EXAMPLES_REPO=https://github.com/pathway-lod/SPARQLQueries
+VIRTUOSO_HTTP_PORT=8890
+SNORQL_PORT=8088
+```
+
+### Step 2 — Start the local Virtuoso
+
+```bash
+docker compose up -d virtuoso
+```
+
+This pulls `openlink/virtuoso-opensource-7:7.2.11` and mounts `./db` as `/database` inside the container (so the database persists across restarts).
+
+### Step 3 — Download the latest RDF data from Zenodo
+
+```bash
+python scripts/download-plantmetwiki-data.py
+```
+
+The script resolves two Zenodo concept DOIs and downloads to `db/data/`:
+
+| Source | Concept DOI | Files |
+|---|---|---|
+| Pathway RDF (`gpml-to-rdf`) | `10.5281/zenodo.17967619` | `all-*.ttl.gz`, `all_gpml_taxonomy_extra-*.ttl.gz`, `all_gpml_properties_extra-*.ttl.gz`, `void-*.ttl` |
+| BGC crosslink RDF (`map-to-rdf`) | GitHub release `bgc-v1.0` | `plantismash.ttl`, `mibig.ttl`, `void-bgc.ttl` |
+
+`.gz` files are decompressed automatically; existing files in `db/data/` are skipped.
+
+### Step 4 — Load the data into Virtuoso
+
+```bash
+bash scripts/load-plantmetwiki-data.sh
+```
+
+The script copies each TTL to `/tmp` inside the container (always allowed by Virtuoso's `DirsAllowed`), runs `ld_dir()` + `rdf_loader_run()`, then prints a graph summary. Loading order goes small-to-large so the 300 MB core bundle is loaded last.
+
+Named graphs created:
+
+| TTL file | Named graph |
+|---|---|
+| `all-*.ttl` | `http://rdf-plantmetwiki.bioinformatics.nl/graph/pathways` |
+| `all_gpml_taxonomy_extra-*.ttl` | `…/graph/gpml-taxonomy-extra` |
+| `all_gpml_properties_extra-*.ttl` | `…/graph/gpml-properties-extra` |
+| `ncbi_iri_mappings-*.ttl` | `…/graph/ncbi-iri-mappings` |
+| `plantismash.ttl` | `…/graph/bgc-plantismash` |
+| `mibig.ttl` | `…/graph/bgc-mibig` |
+| `void-*.ttl` (both) | `…/void` |
+
+Flags:
+- `--clear` — drop all graphs before loading (use when re-loading a fresh build)
+- `--check` — just print current graph triple counts
+
+### Step 5 — Enable CORS on the local Virtuoso
+
+```bash
+set -a; source .env; set +a
+bash scripts/enable-cors.sh
+```
+
+This is mandatory: without CORS, the browser blocks SPARQL requests from `localhost:8088` to `localhost:8890`. The default config (`CORS_ORIGINS=*`) accepts requests from any origin — fine for local dev, restrict in production.
+
+### Step 6 — Serve the Snorql-UI locally
+
+```bash
+bash scripts/local-dev.sh
+# or with a custom port:
+bash scripts/local-dev.sh 3000
+```
+
+The script:
+- Reads `.env` and applies the same `sed` substitutions that `script.sh` does inside the Docker image (no Docker rebuild needed)
+- Creates a temp working copy with the injected configuration
+- Serves the static files via `python3 -m http.server`
+
+Then open **http://localhost:8088/** — the UI is pointing to your local Virtuoso. The first time you query you'll see the loaded graphs in the namespaces drop-down.
+
+### Switching between local and production endpoints
+
+The `.env` file documents two options. To test against the production endpoint without local data, comment out the local URL and uncomment the production one:
+
+```diff
+- SNORQL_ENDPOINT=http://localhost:8890/sparql
++ SNORQL_ENDPOINT=https://sparql-plantmetwiki.bioinformatics.nl/sparql
+```
+
+Restart `local-dev.sh` to pick up the change.
+
+### Refreshing the data after a new release
+
+When `gpml-to-rdf` or `map-to-rdf` publishes a new Zenodo version:
+
+```bash
+rm db/data/*.ttl                                       # clear old files
+python scripts/download-plantmetwiki-data.py           # fetch latest
+bash scripts/load-plantmetwiki-data.sh --clear         # rebuild graphs in Virtuoso
+```
+
+### Legacy data loading (kept for compatibility)
+
+The older container-rebuild flow is still present:
+
+```bash
+./plantmetwiki-rebuild.sh       # rebuilds the Snorql Docker image
+./plantmetwiki-upload-data.sh   # loads data using the old loader
+```
+
+The script-based workflow above is recommended for development because it avoids rebuilding the container on every change.
 
 ## Deploying Production Hostnames for PlantMetWiki
 
