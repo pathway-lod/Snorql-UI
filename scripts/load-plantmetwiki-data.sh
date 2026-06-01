@@ -187,6 +187,20 @@ for fname in "${LOAD_ORDER[@]}"; do
   load_file "$fname" "$graph"
 done
 
+# ── Optional: load NCBITaxon ontology ────────────────────────────────────────
+# Enable by setting LOAD_NCBITAXON=true (and optionally NCBITAXON_SUBSET=taxslim)
+if [[ "${LOAD_NCBITAXON:-false}" == "true" ]]; then
+  echo ""
+  echo "── Loading NCBITaxon ontology ─────────────────────────────────────────"
+  subset="${NCBITAXON_SUBSET:-full}"
+  "${SCRIPT_DIR}/load-graphs/load-ncbitaxon.sh" --subset "$subset"
+else
+  echo ""
+  echo "ℹ  Skipping NCBITaxon graph. To load it:"
+  echo "    LOAD_NCBITAXON=true bash scripts/load-plantmetwiki-data.sh"
+  echo "    LOAD_NCBITAXON=true NCBITAXON_SUBSET=taxslim bash scripts/load-plantmetwiki-data.sh"
+fi
+
 echo ""
 echo "── Enabling SPARQL federation grants ─────────────────────────────────"
 isql <<EOF
