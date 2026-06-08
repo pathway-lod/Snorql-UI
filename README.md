@@ -669,15 +669,35 @@ To resolve NCBI Taxonomy URIs (`NCBITaxon_<id>`) locally — for label lookups a
 
 We use OBO Foundry rather than BioPortal because the **OBO version is CC0** (public domain), while BioPortal mirrors are not freely redistributable.
 
+#### Recommended: data-driven MIREOT subset (`--subset plantmetwiki`)
+
+This option extracts only the taxa actually present in the PlantMetWiki taxonomy-extra graph plus their complete ancestor lineages using [ROBOT](https://github.com/ontodev/robot)'s MIREOT method. The result is ~1.4 MB / 17,707 triples instead of the 1.8 GB full release.
+
+**Prerequisite:** download `robot.jar` from the [ROBOT releases page](https://github.com/ontodev/robot/releases) and place it at `db/robot.jar` (gitignored). Java 11+ is required (the conda `plantmetwiki-rdf` environment provides this).
+
 ```bash
-# Full release (~1.3 GB, several minutes to load):
+# Download robot.jar (one-time setup):
+curl -L -o db/robot.jar https://github.com/ontodev/robot/releases/download/v1.9.6/robot.jar
+
+# Extract subset and load into Virtuoso:
+bash scripts/load-graphs/load-ncbitaxon.sh --subset plantmetwiki
+```
+
+The script automatically uses `db/robot.jar` if present, falling back to the `obolibrary/robot` Docker image only if the JAR is not found. Override with `ROBOT_JAR=/path/to/robot.jar` or `ROBOT_HEAP=4g` if needed.
+
+> **Note:** The Docker fallback can fail with out-of-memory errors when Virtuoso is also running, because Docker's memory cap may be insufficient for the ROBOT JVM. The local JAR approach uses system RAM and is more reliable.
+
+#### Other variants
+
+```bash
+# Full release (~1.8 GB, 21.7 M triples — full label and hierarchy coverage):
 bash scripts/load-graphs/load-ncbitaxon.sh
 
-# Or a much smaller subset if you don't need every taxon:
+# OBO slim subset (~38 MB — labels for major taxa only):
 bash scripts/load-graphs/load-ncbitaxon.sh --subset taxslim
 bash scripts/load-graphs/load-ncbitaxon.sh --subset taxslim-disjoint
 
-# Check what's loaded:
+# Check what's currently loaded:
 bash scripts/load-graphs/load-ncbitaxon.sh --check
 ```
 
@@ -685,7 +705,7 @@ Or load NCBITaxon together with the rest of the data:
 
 ```bash
 LOAD_NCBITAXON=true bash scripts/load-plantmetwiki-data.sh
-LOAD_NCBITAXON=true NCBITAXON_SUBSET=taxslim bash scripts/load-plantmetwiki-data.sh
+LOAD_NCBITAXON=true NCBITAXON_SUBSET=plantmetwiki bash scripts/load-plantmetwiki-data.sh
 ```
 
 The ontology is loaded into:
@@ -693,7 +713,24 @@ The ontology is loaded into:
 http://rdf-plantmetwiki.bioinformatics.nl/graph/ncbitaxon
 ```
 
-Verify with a label lookup:
+#### Generate VoID metadata for the NCBITaxon graph
+
+After loading, generate machine-readable provenance (VoID + PROV-O) that records the triple count, ontology version, subset method, and ROBOT tooling:
+
+```bash
+bash scripts/load-graphs/create-ncbitaxon-void.sh
+```
+
+This writes `db/data/void-ncbitaxon.ttl` and loads it into the `graph/void` named graph. Re-run whenever the NCBITaxon graph is reloaded. The TTL records:
+- `dcterms:source` / `dcterms:references` → OBO Foundry `ncbitaxon.owl`
+- `void:vocabulary` → NCBITaxon IRI namespace (`purl.obolibrary.org/obo/NCBITaxon_`)
+- `owl:versionIRI` → the loaded release date (e.g. `2026-05-13`)
+- `void:triples` → live count queried from Virtuoso
+- `prov:wasGeneratedBy` → ROBOT MIREOT activity with `prov:used` source ontology
+
+#### Verify the loaded graph
+
+Label lookup:
 
 ```sparql
 PREFIX ncbi: <http://purl.obolibrary.org/obo/NCBITaxon_>
@@ -725,11 +762,12 @@ GROUP BY ?taxon ?label
 ORDER BY DESC(?n)
 ```
 
-| Variant | Triples | Recommended for |
-|---|---|---|
-| `full` | ~50 M | Production / full label coverage |
-| `taxslim` | ~500 K | Local dev — labels for major taxa |
-| `taxslim-disjoint` | ~500 K + axioms | Reasoning experiments |
+| Variant | Triples | Size | Recommended for |
+|---|---|---|---|
+| `plantmetwiki` ⭐ | ~17,700 | ~1.4 MB | PlantMetWiki — only taxa in the dataset + ancestors |
+| `taxslim` | ~500 K | ~38 MB | Local dev — labels for major taxa |
+| `taxslim-disjoint` | ~500 K + axioms | ~38 MB | Reasoning experiments |
+| `full` | ~21.7 M | ~1.8 GB | Full label and hierarchy coverage |
 
 ### Legacy data loading (kept for compatibility)
 
