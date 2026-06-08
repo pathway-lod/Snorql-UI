@@ -197,11 +197,16 @@ if [ "${ROBOT_EXTRACT:-false}" = true ]; then
 
   SIZE=$(du -h "${SUBSET_FILE}" | cut -f1)
   echo "  ✔ Subset written: ${FILE}  (${SIZE})"
+
+  # taxa-seed.txt is a temporary artefact — remove it so it doesn't sit
+  # alongside the RDF files in db/data/ (Virtuoso ignores .txt files but
+  # there's no reason to keep it around).
+  rm -f "$SEED_FILE"
+  echo "  ✔ Removed temporary taxa-seed.txt"
   echo ""
-  echo "  The full ncbitaxon.owl and taxa-seed.txt can be removed once the"
-  echo "  subset is confirmed working in Virtuoso:"
+  echo "  Once the subset is confirmed working in Virtuoso, the full"
+  echo "  ncbitaxon.owl can be removed to reclaim 1.8 GB:"
   echo "    rm ${HOST_DATA_DIR}/ncbitaxon.owl"
-  echo "    rm ${HOST_DATA_DIR}/taxa-seed.txt"
   echo ""
 
   # Point DEST to the subset file for the Virtuoso load step below
