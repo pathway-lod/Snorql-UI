@@ -11,14 +11,24 @@
 #
 # Usage:
 #   bash scripts/load-graphs/load-ncbitaxon.sh
-#   bash scripts/load-graphs/load-ncbitaxon.sh --subset taxslim         # smaller
+#   bash scripts/load-graphs/load-ncbitaxon.sh --subset taxslim           # OBO slim
 #   bash scripts/load-graphs/load-ncbitaxon.sh --subset taxslim-disjoint
-#   bash scripts/load-graphs/load-ncbitaxon.sh --check                  # count only
+#   bash scripts/load-graphs/load-ncbitaxon.sh --subset plantmetwiki      # data-driven (recommended)
+#   bash scripts/load-graphs/load-ncbitaxon.sh --check                    # count only
 #
 # Variants available from OBO Foundry:
-#   ncbitaxon.owl                                          (full release, ~1.3 GB)
-#   ncbitaxon/subsets/taxslim.owl                          (slim subset)
+#   ncbitaxon.owl                                          (full release, ~1.8 GB)
+#   ncbitaxon/subsets/taxslim.owl                          (slim subset, ~38 MB)
 #   ncbitaxon/subsets/taxslim-disjoint-over-in-taxon.owl   (slim + disjointness)
+#
+# The "plantmetwiki" subset is generated on demand with ROBOT (via Docker).
+# It contains only the taxa present in db/data/all_gpml_taxonomy_extra-*.ttl
+# and their complete ancestors up to the ontology root.  The result is a few MB.
+# Prerequisites: Docker must be available (used to run obolibrary/robot).
+# Steps performed:
+#   1. Extract unique taxon IRIs from the taxonomy-extra bundle → taxa-seed.txt
+#   2. Run: docker run obolibrary/robot extract --method MIREOT ...
+#   3. Load the resulting ncbitaxon-plantmetwiki-subset.owl into Virtuoso
 
 set -euo pipefail
 
@@ -48,18 +58,29 @@ case "$SUBSET" in
   full)
     URL="http://purl.obolibrary.org/obo/ncbitaxon.owl"
     FILE="ncbitaxon.owl"
+    ROBOT_EXTRACT=false
     ;;
   taxslim)
     URL="http://purl.obolibrary.org/obo/ncbitaxon/subsets/taxslim.owl"
     FILE="ncbitaxon-taxslim.owl"
+    ROBOT_EXTRACT=false
     ;;
   taxslim-disjoint)
     URL="http://purl.obolibrary.org/obo/ncbitaxon/subsets/taxslim-disjoint-over-in-taxon.owl"
     FILE="ncbitaxon-taxslim-disjoint.owl"
+    ROBOT_EXTRACT=false
+    ;;
+  plantmetwiki)
+    # Data-driven subset: only the taxa present in the taxonomy-extra bundle
+    # + their full lineage up to the ontology root, extracted with ROBOT MIREOT.
+    # Requires the full ncbitaxon.owl in db/data/ and Docker for ROBOT.
+    URL="http://purl.obolibrary.org/obo/ncbitaxon.owl"
+    FILE="ncbitaxon-plantmetwiki-subset.owl"
+    ROBOT_EXTRACT=true
     ;;
   *)
     echo "ERROR: unknown --subset value: $SUBSET"
-    echo "Valid: full, taxslim, taxslim-disjoint"
+    echo "Valid: full, taxslim, taxslim-disjoint, plantmetwiki"
     exit 1
     ;;
 esac
@@ -118,7 +139,64 @@ else
   echo "  ✔ $(du -h "$DEST" | cut -f1)"
 fi
 
-# 2. Optional rapper validation
+# 2. ROBOT extract (plantmetwiki subset only)
+if [ "${ROBOT_EXTRACT:-false}" = true ]; then
+  FULL_OWL="${HOST_DATA_DIR}/ncbitaxon.owl"
+  SEED_FILE="${HOST_DATA_DIR}/taxa-seed.txt"
+  SUBSET_FILE="${HOST_DATA_DIR}/${FILE}"
+
+  if [ ! -f "$FULL_OWL" ]; then
+    echo "ERROR: ${FULL_OWL} not found."
+    echo "  The plantmetwiki subset requires the full ncbitaxon.owl as input."
+    echo "  Download it first:"
+    echo "    bash scripts/load-graphs/load-ncbitaxon.sh --subset full"
+    exit 1
+  fi
+
+  if ! docker info >/dev/null 2>&1; then
+    echo "ERROR: Docker is not running. ROBOT requires Docker."
+    exit 1
+  fi
+
+  echo "Extracting seed taxon IRIs from taxonomy-extra bundle ..."
+  TAXONOMY_BUNDLES=( "${HOST_DATA_DIR}"/all_gpml_taxonomy_extra-*.ttl )
+  if [ ${#TAXONOMY_BUNDLES[@]} -eq 0 ] || [ ! -f "${TAXONOMY_BUNDLES[0]}" ]; then
+    echo "ERROR: No all_gpml_taxonomy_extra-*.ttl found in ${HOST_DATA_DIR}."
+    echo "  Run scripts/load-plantmetwiki-data.sh first."
+    exit 1
+  fi
+
+  grep -ohE 'ncbi:[0-9]+' "${TAXONOMY_BUNDLES[@]}" \
+    | sort -u \
+    | sed 's|ncbi:|http://purl.obolibrary.org/obo/NCBITaxon_|' \
+    > "$SEED_FILE"
+  echo "  ✔ $(wc -l < "$SEED_FILE") unique taxa written to taxa-seed.txt"
+
+  echo "Running ROBOT extract (MIREOT) via Docker ..."
+  echo "  Input : ncbitaxon.owl"
+  echo "  Seeds : taxa-seed.txt  (lower terms)"
+  echo "  Output: ${FILE}"
+  echo "  (This reads the full ontology — allow a few minutes and ~4 GB RAM)"
+  docker run --rm \
+    -v "${HOST_DATA_DIR}:/work" -w /work \
+    obolibrary/robot \
+    robot extract \
+      --method MIREOT \
+      --input ncbitaxon.owl \
+      --lower-terms taxa-seed.txt \
+      --output "${FILE}"
+
+  SIZE=$(du -h "${SUBSET_FILE}" | cut -f1)
+  echo "  ✔ Subset written: ${FILE}  (${SIZE})"
+  echo ""
+  echo "  The full ncbitaxon.owl and taxa-seed.txt can be removed once the"
+  echo "  subset is confirmed working:"
+  echo "    rm ${HOST_DATA_DIR}/ncbitaxon.owl"
+  echo "    rm ${HOST_DATA_DIR}/taxa-seed.txt"
+  echo ""
+fi
+
+# 3. Optional rapper validation
 if command -v rapper >/dev/null 2>&1; then
   echo "Validating RDF/XML syntax with rapper ..."
   if rapper -i rdfxml -c "$DEST" >/dev/null 2>&1; then
