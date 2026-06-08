@@ -125,18 +125,27 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 
 check_virtuoso
 
-# 1. Download (skip if file exists)
-if [ -f "$DEST" ]; then
-  echo "[SKIP] $FILE already in db/data/  ($(du -h "$DEST" | cut -f1))"
+# 1. Download
+# For the plantmetwiki subset, the intermediate download is always ncbitaxon.owl
+# (the full release); FILE holds the final subset output name, not the download name.
+if [ "${ROBOT_EXTRACT:-false}" = true ]; then
+  DOWNLOAD_FILE="ncbitaxon.owl"
+else
+  DOWNLOAD_FILE="$FILE"
+fi
+DOWNLOAD_DEST="${HOST_DATA_DIR}/${DOWNLOAD_FILE}"
+
+if [ -f "$DOWNLOAD_DEST" ]; then
+  echo "[SKIP] ${DOWNLOAD_FILE} already in db/data/  ($(du -h "$DOWNLOAD_DEST" | cut -f1))"
 else
   mkdir -p "$HOST_DATA_DIR"
   echo "Downloading $URL ..."
   if command -v wget >/dev/null 2>&1; then
-    wget -O "$DEST" "$URL"
+    wget -O "$DOWNLOAD_DEST" "$URL"
   else
-    curl -L -o "$DEST" "$URL"
+    curl -L -o "$DOWNLOAD_DEST" "$URL"
   fi
-  echo "  ✔ $(du -h "$DEST" | cut -f1)"
+  echo "  ✔ $(du -h "$DOWNLOAD_DEST" | cut -f1)"
 fi
 
 # 2. ROBOT extract (plantmetwiki subset only)
@@ -148,8 +157,7 @@ if [ "${ROBOT_EXTRACT:-false}" = true ]; then
   if [ ! -f "$FULL_OWL" ]; then
     echo "ERROR: ${FULL_OWL} not found."
     echo "  The plantmetwiki subset requires the full ncbitaxon.owl as input."
-    echo "  Download it first:"
-    echo "    bash scripts/load-graphs/load-ncbitaxon.sh --subset full"
+    echo "  It should have been downloaded in the step above — check for errors."
     exit 1
   fi
 
@@ -176,8 +184,9 @@ if [ "${ROBOT_EXTRACT:-false}" = true ]; then
   echo "  Input : ncbitaxon.owl"
   echo "  Seeds : taxa-seed.txt  (lower terms)"
   echo "  Output: ${FILE}"
-  echo "  (This reads the full ontology — allow a few minutes and ~4 GB RAM)"
+  echo "  (Reads the full ontology — allow several minutes; requires ~6 GB RAM)"
   docker run --rm \
+    -e ROBOT_JAVA_ARGS="-Xmx6g" \
     -v "${HOST_DATA_DIR}:/work" -w /work \
     obolibrary/robot \
     robot extract \
@@ -190,10 +199,13 @@ if [ "${ROBOT_EXTRACT:-false}" = true ]; then
   echo "  ✔ Subset written: ${FILE}  (${SIZE})"
   echo ""
   echo "  The full ncbitaxon.owl and taxa-seed.txt can be removed once the"
-  echo "  subset is confirmed working:"
+  echo "  subset is confirmed working in Virtuoso:"
   echo "    rm ${HOST_DATA_DIR}/ncbitaxon.owl"
   echo "    rm ${HOST_DATA_DIR}/taxa-seed.txt"
   echo ""
+
+  # Point DEST to the subset file for the Virtuoso load step below
+  DEST="$SUBSET_FILE"
 fi
 
 # 3. Optional rapper validation
