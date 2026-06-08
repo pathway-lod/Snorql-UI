@@ -6,6 +6,10 @@ The purpose of this project is to develop a fully new UI implementation for Snor
 
 **PlantMetWiki Live Instance:** [sparql-plantmetwiki.bioinformatics.nl](https://sparql-plantmetwiki.bioinformatics.nl/)
 
+**Local instance (Docker):**
+- Snorql UI: http://localhost:8089
+- Virtuoso SPARQL endpoint: http://localhost:8890/sparql
+
 **Upstream Demo:** [Demo 1](https://wikipathways.github.io/Snorql-UI) | [Demo 2](https://ammar257ammar.github.io/Snorql-UI)
 
 
