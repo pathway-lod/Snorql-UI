@@ -131,7 +131,7 @@ let encodedQueryUrl = endpoint + encodeURI(sparql);
    ```bash
    docker compose up -d
    ```
-4. Access the UI at http://localhost:8088
+4. Access the UI at http://localhost:8088 (or whichever port you set as `SNORQL_PORT` in `.env`)
 
 
 ## Configuration
@@ -250,6 +250,49 @@ virtuoso:
 
 Create the directory first: `mkdir virtuoso-data`
 
+
+## Updating PlantMetWiki data
+
+Use this procedure whenever a new RDF release is published on Zenodo (concept DOI `10.5281/zenodo.17967619`).
+
+### 1. Remove old versioned TTL files
+
+The download script skips files that already exist, so old versioned files must be deleted first. Static files that do not change between releases (`mibig.ttl`, `plantismash.ttl`, `ncbitaxon*.owl`) can be left in place.
+
+```bash
+rm db/data/all-plantcyc*.ttl
+rm db/data/all_gpml_taxonomy_extra-plantcyc*.ttl
+rm db/data/all_gpml_properties_extra-plantcyc*.ttl
+rm db/data/void-plantcyc*.ttl
+```
+
+### 2. Download the latest release from Zenodo
+
+The script resolves the concept DOI to the latest published record automatically. Use `--skip-bgc` to leave the BGC crosslink files untouched.
+
+```bash
+python scripts/download-plantmetwiki-data.py --skip-bgc
+```
+
+Files are written to `db/data/`. The script prints the Zenodo version and lists everything it downloaded.
+
+### 3. Reload Virtuoso
+
+`--clear` drops all existing PlantMetWiki named graphs before loading, so no triples from the previous release survive.
+
+```bash
+bash scripts/load-plantmetwiki-data.sh --clear
+```
+
+### 4. Verify
+
+```bash
+bash scripts/load-plantmetwiki-data.sh --check
+```
+
+This prints triple counts per named graph. Check that the numbers are plausible (core pathway graph should be in the tens of millions of triples).
+
+---
 
 ## Customization
 
