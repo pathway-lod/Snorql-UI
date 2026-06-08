@@ -21,13 +21,18 @@
 #   ncbitaxon/subsets/taxslim.owl                          (slim subset, ~38 MB)
 #   ncbitaxon/subsets/taxslim-disjoint-over-in-taxon.owl   (slim + disjointness)
 #
-# The "plantmetwiki" subset is generated on demand with ROBOT (via Docker).
+# The "plantmetwiki" subset is generated on demand with ROBOT.
 # It contains only the taxa present in db/data/all_gpml_taxonomy_extra-*.ttl
 # and their complete ancestors up to the ontology root.  The result is a few MB.
-# Prerequisites: Docker must be available (used to run obolibrary/robot).
+# ROBOT is used via a local JAR (preferred) or Docker as fallback.
+# Prerequisites:
+#   - Local JAR (recommended): download robot.jar from https://github.com/ontodev/robot/releases
+#     and place at db/robot.jar  (or set ROBOT_JAR=/path/to/robot.jar)
+#   - Docker fallback: obolibrary/robot image  (NOTE: Docker memory cap can cause OOM on
+#     large ontologies — the local JAR approach is more reliable)
 # Steps performed:
 #   1. Extract unique taxon IRIs from the taxonomy-extra bundle → taxa-seed.txt
-#   2. Run: docker run obolibrary/robot extract --method MIREOT ...
+#   2. Run ROBOT extract --method MIREOT (via local JAR or Docker)
 #   3. Load the resulting ncbitaxon-plantmetwiki-subset.owl into Virtuoso
 
 set -euo pipefail
@@ -161,8 +166,21 @@ if [ "${ROBOT_EXTRACT:-false}" = true ]; then
     exit 1
   fi
 
-  if ! docker info >/dev/null 2>&1; then
-    echo "ERROR: Docker is not running. ROBOT requires Docker."
+  # Locate ROBOT: prefer local robot.jar, fall back to Docker.
+  # A local JAR avoids Docker's memory cap and path-escaping issues.
+  # Download from: https://github.com/ontodev/robot/releases
+  ROBOT_JAR="${ROBOT_JAR:-${REPO_ROOT}/db/robot.jar}"
+  ROBOT_HEAP="${ROBOT_HEAP:-8g}"
+
+  if [ -f "$ROBOT_JAR" ]; then
+    ROBOT_CMD="java -Xmx${ROBOT_HEAP} -jar ${ROBOT_JAR}"
+    echo "  Using local ROBOT JAR: ${ROBOT_JAR}"
+  elif docker info >/dev/null 2>&1; then
+    ROBOT_CMD=""  # handled separately in the docker run block below
+    echo "  Using ROBOT via Docker (local JAR not found at ${ROBOT_JAR})"
+  else
+    echo "ERROR: Neither a local robot.jar (${ROBOT_JAR}) nor Docker is available."
+    echo "  Download ROBOT: https://github.com/ontodev/robot/releases"
     exit 1
   fi
 
@@ -180,20 +198,29 @@ if [ "${ROBOT_EXTRACT:-false}" = true ]; then
     > "$SEED_FILE"
   echo "  ✔ $(wc -l < "$SEED_FILE") unique taxa written to taxa-seed.txt"
 
-  echo "Running ROBOT extract (MIREOT) via Docker ..."
+  echo "Running ROBOT extract (MIREOT) ..."
   echo "  Input : ncbitaxon.owl"
   echo "  Seeds : taxa-seed.txt  (lower terms)"
   echo "  Output: ${FILE}"
-  echo "  (Reads the full ontology — allow several minutes; requires ~6 GB RAM)"
-  docker run --rm \
-    -e ROBOT_JAVA_ARGS="-Xmx6g" \
-    -v "${HOST_DATA_DIR}:/work" -w /work \
-    obolibrary/robot \
-    robot extract \
+  echo "  (Reads the full ontology — allow several minutes)"
+
+  if [ -n "$ROBOT_CMD" ]; then
+    $ROBOT_CMD extract \
       --method MIREOT \
-      --input ncbitaxon.owl \
-      --lower-terms taxa-seed.txt \
-      --output "${FILE}"
+      --input "${FULL_OWL}" \
+      --lower-terms "${SEED_FILE}" \
+      --output "${SUBSET_FILE}"
+  else
+    docker run --rm \
+      -e ROBOT_JAVA_ARGS="-Xmx${ROBOT_HEAP}" \
+      -v "${HOST_DATA_DIR}:/work" -w /work \
+      obolibrary/robot \
+      robot extract \
+        --method MIREOT \
+        --input ncbitaxon.owl \
+        --lower-terms taxa-seed.txt \
+        --output "${FILE}"
+  fi
 
   SIZE=$(du -h "${SUBSET_FILE}" | cut -f1)
   echo "  ✔ Subset written: ${FILE}  (${SIZE})"
