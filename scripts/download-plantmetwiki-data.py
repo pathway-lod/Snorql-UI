@@ -28,12 +28,17 @@ Usage
     python scripts/download-plantmetwiki-data.py --out-dir db/data
     python scripts/download-plantmetwiki-data.py --skip-pathways   # BGC only
     python scripts/download-plantmetwiki-data.py --skip-bgc        # pathways only
+    python scripts/download-plantmetwiki-data.py --bgc-tag bgc-v1.1  # pin a specific
+                                                                       # map-to-rdf release
+                                                                       # (default: auto-detect
+                                                                       # latest bgc-vX.Y tag)
 """
 
 from __future__ import annotations
 
 import argparse
 import gzip
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -43,8 +48,9 @@ import requests
 
 # ── Zenodo records ────────────────────────────────────────────────────────────
 ZENODO_PATHWAYS_DOI = "10.5281/zenodo.17967619"   # gpml-to-rdf
-ZENODO_BGC_DOI      = "10.5281/zenodo.20345133"   # map-to-rdf
+ZENODO_BGC_DOI      = "10.5281/zenodo.20345133"   # map-to-rdf (concept DOI, always latest)
 ZENODO_API          = "https://zenodo.org/api/records"
+GITHUB_API          = "https://api.github.com"
 
 # Files to download from each Zenodo record (matched by prefix)
 PATHWAY_FILE_PREFIXES = (
@@ -57,9 +63,15 @@ PATHWAY_FILE_PREFIXES = (
 
 # BGC files: inside the repo zip under output_ttl/ — use GitHub raw URL instead
 # (Zenodo releases the whole repo as a zip; raw GitHub is simpler for small files)
-BGC_GITHUB_TAG   = "bgc-v1.0"
-BGC_GITHUB_OWNER = "pathway-lod"
-BGC_GITHUB_REPO  = "map-to-rdf"
+#
+# The release tag is auto-detected from GitHub (latest "bgc-vX.Y" tag, see
+# get_latest_bgc_tag()). BGC_GITHUB_TAG_FALLBACK is only used if that API call
+# fails (offline / rate-limited) — bump it whenever map-to-rdf cuts a new
+# bgc-vX.Y release so an offline run still gets a sensible default.
+# To pin a specific version, pass --bgc-tag bgc-vX.Y.
+BGC_GITHUB_OWNER        = "pathway-lod"
+BGC_GITHUB_REPO         = "map-to-rdf"
+BGC_GITHUB_TAG_FALLBACK = "bgc-v1.1"
 BGC_FILES        = [
     "output_ttl/plantismash.ttl",
     "output_ttl/mibig.ttl",
@@ -88,6 +100,26 @@ def download_file(url: str, dest: Path, chunk_size: int = 1 << 20) -> None:
                 if total:
                     print(f"\r    {done/1e6:.1f} / {total/1e6:.1f} MB", end="")
     print()
+
+
+def get_latest_bgc_tag() -> str:
+    """Return the latest 'bgc-vX.Y' release tag for map-to-rdf from GitHub.
+
+    Falls back to BGC_GITHUB_TAG_FALLBACK if the GitHub API is unreachable
+    or rate-limited (e.g. CI without auth).
+    """
+    url = f"{GITHUB_API}/repos/{BGC_GITHUB_OWNER}/{BGC_GITHUB_REPO}/tags"
+    try:
+        r = requests.get(url, timeout=10)
+        r.raise_for_status()
+        tags = [t["name"] for t in r.json() if re.fullmatch(r"bgc-v\d+\.\d+", t["name"])]
+        if tags:
+            tags.sort(key=lambda t: tuple(int(x) for x in t[len("bgc-v"):].split(".")))
+            return tags[-1]
+    except Exception as e:
+        print(f"  [WARN] Could not fetch latest bgc- tag from GitHub ({e})")
+    print(f"  Falling back to {BGC_GITHUB_TAG_FALLBACK}")
+    return BGC_GITHUB_TAG_FALLBACK
 
 
 def decompress_gz(gz_path: Path) -> Path:
@@ -139,22 +171,22 @@ def download_pathways(out_dir: Path) -> list[Path]:
     return downloaded
 
 
-def download_bgc(out_dir: Path) -> list[Path]:
-    """Download BGC RDF files from GitHub release (raw URLs)."""
-    print(f"\n── BGC crosslink RDF (map-to-rdf {BGC_GITHUB_TAG}) ─────────────")
+def download_bgc(out_dir: Path, tag: str) -> list[Path]:
+    """Download BGC RDF files from a map-to-rdf GitHub release tag (raw URLs).
+
+    Always re-downloads and overwrites any existing copies in out_dir — these
+    files are small (<500 KB combined), and re-running this after a new
+    bgc-vX.Y release is the intended way to refresh db/data/.
+    """
+    print(f"\n── BGC crosslink RDF (map-to-rdf {tag}) ─────────────")
     base = (f"https://raw.githubusercontent.com/{BGC_GITHUB_OWNER}/"
-            f"{BGC_GITHUB_REPO}/{BGC_GITHUB_TAG}")
+            f"{BGC_GITHUB_REPO}/{tag}")
 
     downloaded: list[Path] = []
     for rel_path in BGC_FILES:
         fname = Path(rel_path).name
         dest  = out_dir / fname
         url   = f"{base}/{rel_path}"
-
-        if dest.exists():
-            print(f"  [SKIP] {fname} (already exists)")
-            downloaded.append(dest)
-            continue
 
         print(f"  ↓ {fname}")
         download_file(url, dest)
@@ -174,6 +206,9 @@ def parse_args() -> argparse.Namespace:
                    help="Skip pathway RDF download")
     p.add_argument("--skip-bgc",      action="store_true",
                    help="Skip BGC crosslink download")
+    p.add_argument("--bgc-tag",       type=str, default=None,
+                   help="Pin map-to-rdf release tag for BGC files, e.g. bgc-v1.1 "
+                        "(default: auto-detect latest bgc-vX.Y tag from GitHub)")
     return p.parse_args()
 
 
@@ -187,7 +222,8 @@ def main() -> int:
         all_files.extend(download_pathways(args.out_dir))
 
     if not args.skip_bgc:
-        all_files.extend(download_bgc(args.out_dir))
+        bgc_tag = args.bgc_tag or get_latest_bgc_tag()
+        all_files.extend(download_bgc(args.out_dir, bgc_tag))
 
     print(f"\n── Downloaded files in {args.out_dir}/ ───────────────────────────")
     for f in sorted(args.out_dir.glob("*.ttl")):
