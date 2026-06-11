@@ -223,5 +223,25 @@ EOF
 check_graphs
 
 echo ""
+echo "── Publishing merged VoID at well-known URI ──────────────────────────"
+shopt -s nullglob
+VOID_FILES=("$DATA_DIR"/void-plantcyc*.ttl "$DATA_DIR"/void-bgc.ttl "$DATA_DIR"/void-ncbitaxon.ttl)
+shopt -u nullglob
+if [[ ${#VOID_FILES[@]} -gt 0 ]]; then
+  if docker ps --format "{{.Names}}" | grep -q "^${SNORQL_CONTAINER}$"; then
+    WELL_KNOWN_VOID="$(mktemp)"
+    cat "${VOID_FILES[@]}" > "$WELL_KNOWN_VOID"
+    docker exec "$SNORQL_CONTAINER" mkdir -p /usr/local/apache2/htdocs/.well-known
+    docker cp "$WELL_KNOWN_VOID" "${SNORQL_CONTAINER}:/usr/local/apache2/htdocs/.well-known/void"
+    rm -f "$WELL_KNOWN_VOID"
+    echo "  ✔ Published ${#VOID_FILES[@]} VoID file(s) → /.well-known/void"
+  else
+    echo "  [SKIP] Snorql container '${SNORQL_CONTAINER}' not running — VoID not published"
+  fi
+else
+  echo "  [SKIP] No void-*.ttl files found in $DATA_DIR"
+fi
+
+echo ""
 echo "✔ All data loaded. Run ./scripts/enable-cors.sh if not already done."
 echo "  UI → http://localhost:${SNORQL_PORT:-8088}/"
