@@ -71,9 +71,14 @@ cat > "$VOID_FILE" <<EOF
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix pav:     <http://purl.org/pav/> .
 @prefix dcat:    <http://www.w3.org/ns/dcat#> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
 @prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
 @prefix prov:    <http://www.w3.org/ns/prov#> .
 @prefix owl:     <http://www.w3.org/2002/07/owl#> .
+
+<http://rdf-plantmetwiki.bioinformatics.nl/organization/wur-plant-sciences> a foaf:Organization ;
+    foaf:name "Wageningen University & Research, Department of Plant Sciences"@en ;
+    foaf:homepage <https://www.wur.nl/> .
 
 <${NCBITAXON_GRAPH}> a void:Dataset ;
     dcterms:title "NCBITaxon MIREOT subset for PlantMetWiki"@en ;
@@ -83,6 +88,8 @@ cat > "$VOID_FILE" <<EOF
     void:vocabulary <http://purl.obolibrary.org/obo/NCBITaxon_> ;
     void:sparqlEndpoint <https://sparql-plantmetwiki.bioinformatics.nl/sparql> ;
     pav:createdOn "${TODAY}"^^xsd:date ;
+    dcterms:modified "${TODAY}"^^xsd:date ;
+    dcterms:publisher <http://rdf-plantmetwiki.bioinformatics.nl/organization/wur-plant-sciences> ;
     prov:wasGeneratedBy [
         a prov:Activity ;
         dcterms:description "ROBOT extract --method MIREOT on the full NCBITaxon release; seed taxa derived from all wp:organism triples in graph/gpml-taxonomy-extra"@en ;
