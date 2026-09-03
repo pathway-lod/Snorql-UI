@@ -4,7 +4,9 @@ Simple SPARQL query interface based on the original idea of [kurtjx/SNORQL](http
 
 The purpose of this project is to develop a fully new UI implementation for Snorql that uses the latest web standards for HTML5, CSS3 and JQuery, and add new productivity features to facilitate query retrieval and sharing.
 
-**PlantMetWiki Live Instance:** [sparql-plantmetwiki.bioinformatics.nl](https://sparql-plantmetwiki.bioinformatics.nl/)
+**PlantMetWiki Live Instance:** 
+- Check out our user friendly interface: [plantmetwiki.bioinformatics.nl](https://plantmetwiki.bioinformatics.nl)
+- Or access the SPARQL endpoint directly: [plantmetwiki.bioinformatics.nl/sparql](https://plantmetwiki.bioinformatics.nl/sparql)
 
 **Local instance (Docker):**
 - Snorql UI: http://localhost:8089
