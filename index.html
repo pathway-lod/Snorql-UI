@@ -8,6 +8,73 @@
 	<link rel="icon" href="assets/images/favicon.ico">
 
     <title>Plant Metabolic Pathways Wiki SNORQL UI and SPARQL Explorer</title>
+
+	<!-- Machine-readable metadata (schema.org JSON-LD) for FAIR assessment tools
+	     and search engines; keep in line with the VoID at /.well-known/void. -->
+	<script type="application/ld+json">
+	{
+	  "@context": "https://schema.org",
+	  "@graph": [
+	    {
+	      "@type": "Dataset",
+	      "@id": "https://doi.org/10.5281/zenodo.17967619",
+	      "identifier": "https://doi.org/10.5281/zenodo.17967619",
+	      "sameAs": "https://doi.org/10.5281/zenodo.17967619",
+	      "name": "PlantMetWiki: Plant Metabolic Pathways Wiki",
+	      "alternateName": "PlantMetWiki",
+	      "description": "Knowledge graph of plant metabolic pathways, reactions, genes and metabolites derived from the PlantCyc / PMN databases, converted to the WikiPathways GPML and RDF model, cross-linked to biosynthetic gene clusters (MIBiG, plantiSMASH) and NCBI Taxonomy, and queryable through a public SPARQL endpoint.",
+	      "url": "https://plantmetwiki.bioinformatics.nl/",
+	      "keywords": ["plant metabolism", "metabolic pathways", "biosynthetic gene clusters", "knowledge graph", "linked data", "SPARQL", "WikiPathways", "PlantCyc"],
+	      "about": [
+	        { "@id": "http://purl.obolibrary.org/obo/GO_0008152", "name": "metabolic process" },
+	        { "@id": "http://purl.obolibrary.org/obo/NCBITaxon_33090", "name": "Viridiplantae" }
+	      ],
+	      "license": "https://plantcyc.org/?webform=license-agreement",
+	      "conditionsOfAccess": "Open access; no registration required.",
+	      "isAccessibleForFree": true,
+	      "creator": {
+	        "@type": "Person",
+	        "name": "Elena Del Pup",
+	        "affiliation": { "@id": "https://www.wur.nl/" }
+	      },
+	      "publisher": { "@id": "https://www.wur.nl/" },
+	      "isBasedOn": [
+	        { "@type": "Dataset", "name": "PlantCyc / Plant Metabolic Network databases", "url": "https://plantcyc.org/", "license": "https://plantcyc.org/?webform=license-agreement", "copyrightHolder": "Carnegie Institution for Science" },
+	        { "@type": "SoftwareSourceCode", "name": "PlantCyc to WikiPathways: BioCyc flat-file to GPML2021 conversion pipeline", "identifier": "https://doi.org/10.5281/zenodo.18404067" },
+	        { "@type": "ScholarlyArticle", "name": "WikiPathways 2024: next generation pathway database", "identifier": "https://doi.org/10.1093/nar/gkad960" }
+	      ],
+	      "hasPart": [
+	        { "@type": "Dataset", "name": "PlantMetWiki BGC crosslinks: MIBiG 4.0", "url": "https://mibig.secondarymetabolites.org/", "license": "https://creativecommons.org/licenses/by/4.0/" },
+	        { "@type": "Dataset", "name": "PlantMetWiki BGC crosslinks: plantiSMASH v2", "url": "https://plantismash.bioinformatics.nl/", "license": "https://www.gnu.org/licenses/gpl-3.0.en.html" }
+	      ],
+	      "distribution": [
+	        { "@type": "DataDownload", "name": "SPARQL endpoint", "contentUrl": "https://plantmetwiki.bioinformatics.nl/sparql", "encodingFormat": "application/sparql-results+json" },
+	        { "@type": "DataDownload", "name": "RDF release (Zenodo)", "contentUrl": "https://doi.org/10.5281/zenodo.17967619", "encodingFormat": "text/turtle" }
+	      ],
+	      "subjectOf": { "@type": "CreativeWork", "name": "VoID description", "url": "https://plantmetwiki.bioinformatics.nl/.well-known/void", "encodingFormat": "text/turtle" }
+	    },
+	    {
+	      "@type": "WebApplication",
+	      "@id": "https://plantmetwiki.bioinformatics.nl/",
+	      "name": "PlantMetWiki SPARQL Explorer",
+	      "url": "https://plantmetwiki.bioinformatics.nl/",
+	      "applicationCategory": "Bioinformatics",
+	      "codeRepository": "https://github.com/pathway-lod/Snorql-UI",
+	      "license": "https://www.gnu.org/licenses/gpl-3.0.en.html",
+	      "isBasedOn": "https://github.com/wikipathways/Snorql-UI",
+	      "author": { "@type": "Person", "name": "Ammar Ammar" },
+	      "maintainer": { "@type": "Person", "name": "Elena Del Pup", "affiliation": { "@id": "https://www.wur.nl/" } },
+	      "about": { "@id": "https://doi.org/10.5281/zenodo.17967619" }
+	    },
+	    {
+	      "@type": "Organization",
+	      "@id": "https://www.wur.nl/",
+	      "name": "Wageningen University & Research, Department of Plant Sciences",
+	      "url": "https://www.wur.nl/"
+	    }
+	  ]
+	}
+	</script>
 	<link rel="stylesheet" type="text/css" href="assets/css/bootstrap.min.css" />
 	<link rel="stylesheet" type="text/css" href="assets/codemirror/lib/codemirror.css" />
 	<link rel="stylesheet" type="text/css" href="assets/codemirror/addon/display/fullscreen.css" />

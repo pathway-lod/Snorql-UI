@@ -14,6 +14,7 @@
 #   BGC plantiSMASH       → graph/bgc-plantismash
 #   BGC MIBiG             → graph/bgc-mibig
 #   VoID (BGC)            → void
+#   Vocabularies          → graph/vocabularies  (load-graphs/load-vocabularies.sh)
 #
 # Usage:
 #   bash scripts/load-plantmetwiki-data.sh
@@ -209,6 +210,14 @@ else
   echo "    LOAD_NCBITAXON=true NCBITAXON_SUBSET=taxslim bash scripts/load-plantmetwiki-data.sh"
 fi
 
+# ── Vocabularies (class labels for wp:, gpml:, void:, pmw:) ──────────────────
+# Small (~1k triples); on by default. Disable with LOAD_VOCABULARIES=false.
+if [[ "${LOAD_VOCABULARIES:-true}" == "true" ]]; then
+  echo ""
+  echo "── Loading vocabularies ───────────────────────────────────────────────"
+  "${SCRIPT_DIR}/load-graphs/load-vocabularies.sh"
+fi
+
 echo ""
 echo "── Enabling SPARQL federation grants ─────────────────────────────────"
 isql <<EOF
@@ -233,6 +242,9 @@ if [[ ${#VOID_FILES[@]} -gt 0 ]]; then
     cat "${VOID_FILES[@]}" > "$WELL_KNOWN_VOID"
     docker exec "$SNORQL_CONTAINER" mkdir -p /usr/local/apache2/htdocs/.well-known
     docker cp "$WELL_KNOWN_VOID" "${SNORQL_CONTAINER}:/usr/local/apache2/htdocs/.well-known/void"
+    # mktemp creates the file 0600 and docker cp preserves that, so Apache
+    # (running as daemon) could not read it and answered 403 Forbidden.
+    docker exec "$SNORQL_CONTAINER" chmod 644 /usr/local/apache2/htdocs/.well-known/void
     rm -f "$WELL_KNOWN_VOID"
     echo "  ✔ Published ${#VOID_FILES[@]} VoID file(s) → /.well-known/void"
   else

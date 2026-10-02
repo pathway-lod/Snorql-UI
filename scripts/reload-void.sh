@@ -71,6 +71,9 @@ if docker ps --format "{{.Names}}" | grep -q "^${SNORQL_CN}$"; then
   cat "${void_files[@]}" > "$WELL_KNOWN_VOID"
   docker exec "$SNORQL_CN" mkdir -p /usr/local/apache2/htdocs/.well-known
   docker cp "$WELL_KNOWN_VOID" "${SNORQL_CN}:/usr/local/apache2/htdocs/.well-known/void"
+  # mktemp creates the file 0600 and docker cp preserves that, so Apache
+  # (running as daemon) could not read it and answered 403 Forbidden.
+  docker exec "$SNORQL_CN" chmod 644 /usr/local/apache2/htdocs/.well-known/void
   rm -f "$WELL_KNOWN_VOID"
   echo "✔ Republished ${#void_files[@]} VoID file(s) → /.well-known/void"
 else

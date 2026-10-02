@@ -1,0 +1,30 @@
+@prefix pmw:     <http://rdf-plantmetwiki.bioinformatics.nl/vocab/> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix vann:    <http://purl.org/vocab/vann/> .
+@prefix obo:     <http://purl.obolibrary.org/obo/> .
+
+# PlantMetWiki vocabulary: the few terms PlantMetWiki defines itself (used by
+# the BGC graphs from map-to-rdf). Loaded into graph/vocabularies by
+# scripts/load-graphs/load-vocabularies.sh so every class has an rdfs:label.
+
+<http://rdf-plantmetwiki.bioinformatics.nl/vocab/> a owl:Ontology ;
+    rdfs:label "PlantMetWiki vocabulary"@en ;
+    dcterms:title "PlantMetWiki vocabulary"@en ;
+    dcterms:description "Classes defined by PlantMetWiki (Plant Metabolic Pathways Wiki) for data not covered by the WikiPathways vocabularies."@en ;
+    dcterms:publisher <http://rdf-plantmetwiki.bioinformatics.nl/organization/wur-plant-sciences> ;
+    dcterms:license <https://creativecommons.org/publicdomain/zero/1.0/> ;
+    vann:preferredNamespacePrefix "pmw" ;
+    vann:preferredNamespaceUri "http://rdf-plantmetwiki.bioinformatics.nl/vocab/" .
+
+pmw:BiosyntheticGeneCluster a owl:Class ;
+    rdfs:label "biosynthetic gene cluster"@en ;
+    rdfs:comment "A group of physically clustered genes that together encode the biosynthetic pathway of a specialised metabolite, as recorded in MIBiG or predicted by plantiSMASH."@en ;
+    rdfs:subClassOf obo:SO_0002357 ;
+    rdfs:isDefinedBy <http://rdf-plantmetwiki.bioinformatics.nl/vocab/> .
+
+pmw:MemberIdentifier a owl:Class ;
+    rdfs:label "BGC member identifier"@en ;
+    rdfs:comment "A gene identifier listed as a member of a biosynthetic gene cluster that could not be normalised to a resolvable gene IRI; kept so the cluster membership is not lost."@en ;
+    rdfs:isDefinedBy <http://rdf-plantmetwiki.bioinformatics.nl/vocab/> .
