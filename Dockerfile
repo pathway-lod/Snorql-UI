@@ -4,6 +4,7 @@ ADD ./assets /usr/local/apache2/htdocs/assets/
 COPY ./cookies.html /usr/local/apache2/htdocs/
 COPY ./index.html /usr/local/apache2/htdocs/
 COPY ./sd.ttl /usr/local/apache2/htdocs/sd.ttl
+COPY ./vocab/pmw.ttl /usr/local/apache2/htdocs/vocab/pmw.ttl
  
 ENV PATH /usr/local/apache2/bin:$PATH
 

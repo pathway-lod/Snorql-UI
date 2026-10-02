@@ -110,6 +110,10 @@ DELETE FROM DB.DBA.LOAD_LIST WHERE ll_file LIKE '/tmp/vocab-%';
 
 ld_dir('/tmp', 'vocab-*.ttl', '${GRAPH_URI}');
 rdf_loader_run();
+
+-- The WikiPathways vocabulary files contain any23 triples scraped from HTML
+-- <meta> tags; drop them so they do not add a non-LOV namespace.
+SPARQL WITH <${GRAPH_URI}> DELETE { ?s ?p ?o } WHERE { ?s ?p ?o . FILTER(STRSTARTS(STR(?p), "http://vocab.sindice.net/any23#")) };
 checkpoint;
 
 SPARQL SELECT (COUNT(*) AS ?triples) WHERE { GRAPH <${GRAPH_URI}> { ?s ?p ?o } };

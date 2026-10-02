@@ -4,19 +4,33 @@
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix vann:    <http://purl.org/vocab/vann/> .
 @prefix obo:     <http://purl.obolibrary.org/obo/> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
 
-# PlantMetWiki vocabulary: the few terms PlantMetWiki defines itself (used by
-# the BGC graphs from map-to-rdf). Loaded into graph/vocabularies by
-# scripts/load-graphs/load-vocabularies.sh so every class has an rdfs:label.
+# PlantMetWiki vocabulary: the few terms PlantMetWiki defines itself (BGC
+# classes from map-to-rdf, GPML property layer from gpml-to-rdf).
+# - Loaded into graph/vocabularies by scripts/load-graphs/load-vocabularies.sh
+#   so every class and property has an rdfs:label.
+# - Served as Turtle at the namespace URI /vocab/ (httpd-proxy.conf), which
+#   is what Linked Open Vocabularies (LOV) needs to accept a submission.
 
 <http://rdf-plantmetwiki.bioinformatics.nl/vocab/> a owl:Ontology ;
     rdfs:label "PlantMetWiki vocabulary"@en ;
     dcterms:title "PlantMetWiki vocabulary"@en ;
-    dcterms:description "Classes defined by PlantMetWiki (Plant Metabolic Pathways Wiki) for data not covered by the WikiPathways vocabularies."@en ;
+    dcterms:description "Classes and properties defined by PlantMetWiki (Plant Metabolic Pathways Wiki) for data not covered by the WikiPathways vocabularies: biosynthetic gene cluster membership and the PlantCyc/GPML key-value property layer."@en ;
+    dcterms:creator [ a foaf:Person ; foaf:name "Elena Del Pup" ] ;
     dcterms:publisher <http://rdf-plantmetwiki.bioinformatics.nl/organization/wur-plant-sciences> ;
     dcterms:license <https://creativecommons.org/publicdomain/zero/1.0/> ;
+    dcterms:issued "2026-10-02"^^xsd:date ;
+    dcterms:modified "2026-10-02"^^xsd:date ;
+    owl:versionInfo "1.0" ;
+    foaf:homepage <https://plantmetwiki.bioinformatics.nl/> ;
     vann:preferredNamespacePrefix "pmw" ;
     vann:preferredNamespaceUri "http://rdf-plantmetwiki.bioinformatics.nl/vocab/" .
+
+<http://rdf-plantmetwiki.bioinformatics.nl/organization/wur-plant-sciences> a foaf:Organization ;
+    foaf:name "Wageningen University & Research, Department of Plant Sciences"@en ;
+    foaf:homepage <https://www.wur.nl/> .
 
 pmw:BiosyntheticGeneCluster a owl:Class ;
     rdfs:label "biosynthetic gene cluster"@en ;
@@ -27,4 +41,24 @@ pmw:BiosyntheticGeneCluster a owl:Class ;
 pmw:MemberIdentifier a owl:Class ;
     rdfs:label "BGC member identifier"@en ;
     rdfs:comment "A gene identifier listed as a member of a biosynthetic gene cluster that could not be normalised to a resolvable gene IRI; kept so the cluster membership is not lost."@en ;
+    rdfs:isDefinedBy <http://rdf-plantmetwiki.bioinformatics.nl/vocab/> .
+
+pmw:gpmlProperty a owl:ObjectProperty ;
+    rdfs:label "GPML property"@en ;
+    rdfs:comment "Links a pathway, data node or interaction to one key-value Property element preserved from its PlantCyc-derived GPML source."@en ;
+    rdfs:isDefinedBy <http://rdf-plantmetwiki.bioinformatics.nl/vocab/> .
+
+pmw:key a owl:DatatypeProperty ;
+    rdfs:label "property key"@en ;
+    rdfs:comment "The key of a preserved GPML Property element (e.g. ReactionCount, ReactionIDs)."@en ;
+    rdfs:isDefinedBy <http://rdf-plantmetwiki.bioinformatics.nl/vocab/> .
+
+pmw:value a owl:DatatypeProperty ;
+    rdfs:label "property value"@en ;
+    rdfs:comment "The value of a preserved GPML Property element."@en ;
+    rdfs:isDefinedBy <http://rdf-plantmetwiki.bioinformatics.nl/vocab/> .
+
+pmw:plantcycId a owl:DatatypeProperty ;
+    rdfs:label "PlantCyc identifier"@en ;
+    rdfs:comment "The PlantCyc / PMN frame identifier of the source object (e.g. PWY-6585 for a pathway)."@en ;
     rdfs:isDefinedBy <http://rdf-plantmetwiki.bioinformatics.nl/vocab/> .

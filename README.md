@@ -299,7 +299,8 @@ This prints triple counts per named graph. Check that the numbers are plausible 
 ### Linked Data and VoID
 
 - The merged VoID is published at `/.well-known/void` (served as `text/turtle`) by the load scripts; `bash scripts/reload-void.sh` republishes it.
-- Resource IRIs under `http://rdf-plantmetwiki.bioinformatics.nl/` (`/pathways/`, `/Pathway/`, `/id/`, `/dataset/`, `/vocab/`, …) are dereferenceable: `httpd-proxy.conf` answers RDF requests (`Accept: text/turtle`, `application/rdf+xml`, `application/n-triples`) with a SPARQL `DESCRIBE`, and redirects browsers to the explorer with that query filled in.
+- Resource IRIs under `http://rdf-plantmetwiki.bioinformatics.nl/` (`/pathways/`, `/Pathway/`, `/id/`, `/dataset/`, `/vocab/`, …) are dereferenceable: `httpd-proxy.conf` answers RDF requests (`Accept: text/turtle`, `application/rdf+xml`, `application/n-triples`) with the resource's triples from Virtuoso, and redirects browsers to the explorer with a query for the resource filled in.
+- The PlantMetWiki vocabulary (`vocab/pmw.ttl`) is served as Turtle at its namespace URI, `/vocab/`.
 
 ---
 
