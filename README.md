@@ -738,6 +738,24 @@ This writes `db/data/void-ncbitaxon.ttl` and loads it into the `graph/void` name
 - `void:triples` → live count queried from Virtuoso
 - `prov:wasGeneratedBy` → ROBOT MIREOT activity with `prov:used` source ontology
 
+#### Generate VoID metadata for the vocabularies graph
+
+The vocabularies graph gets the same treatment, so every named graph on the endpoint has a
+machine-readable provenance record:
+
+```bash
+bash scripts/load-graphs/create-vocabularies-void.sh
+```
+
+This writes `db/data/void-vocabularies.ttl` and loads it into the `graph/void` named graph. Re-run
+whenever `load-vocabularies.sh` is re-run. The TTL records:
+- `dcterms:source` → the four inputs: `wp.owl`, `gpml.owl`, the VoID vocabulary, and `vocab/pmw.ttl`
+- `void:vocabulary` → the `wp:`, `gpml:`, `void:` and `pmw:` namespaces
+- `owl:versionInfo` → the `pmw:` vocabulary version, queried live from the graph
+- `void:triples` → live count queried from Virtuoso
+- `dcat:byteSize` → size of `vocab/pmw.ttl`
+- `prov:wasGeneratedBy` → `load-vocabularies.sh` activity with `prov:used` on all four inputs
+
 #### Verify the loaded graph
 
 Label lookup:

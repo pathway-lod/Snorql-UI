@@ -8,6 +8,7 @@
 #   - void-*.ttl        (gpml-to-rdf core VoID + BridgeDb void:Linkset + sd:Service)
 #   - void-bgc*.ttl     (map-to-rdf BGC VoID)
 #   - void-ncbitaxon*.ttl (create-ncbitaxon-void.sh output, if present)
+#   - void-vocabularies*.ttl (create-vocabularies-void.sh output, if present)
 #
 # Usage:
 #   bash scripts/reload-void.sh
