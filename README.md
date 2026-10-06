@@ -290,11 +290,27 @@ bash scripts/load-plantmetwiki-data.sh --clear
 bash scripts/load-plantmetwiki-data.sh --check
 ```
 
-This prints triple counts per named graph. Check that the numbers are plausible (core pathway graph should be in the tens of millions of triples).
+This prints triple counts per named graph. Check that the numbers are plausible (core pathway graph `graph/pathways` should be a few million triples, and only one release should be present).
+
+### 5. Refresh the vocabularies VoID
+
+```bash
+bash scripts/load-graphs/create-vocabularies-void.sh
+```
+
+See [Vocabularies](#vocabularies) below.
 
 ### Vocabularies
 
 `load-plantmetwiki-data.sh` also runs `scripts/load-graphs/load-vocabularies.sh` (disable with `LOAD_VOCABULARIES=false`). It loads the WikiPathways `wp:`/`gpml:` vocabularies, the VoID vocabulary and the PlantMetWiki vocabulary (`vocab/pmw.ttl`) into `graph/vocabularies`, so the classes used in the data have `rdfs:label`s. It can be run on its own at any time.
+
+After (re)loading the vocabularies, describe the graph in the VoID so `/.well-known/void` stays complete:
+
+```bash
+bash scripts/load-graphs/create-vocabularies-void.sh
+```
+
+It reads the triple count and the `pmw:` version from Virtuoso, writes `db/data/void-vocabularies.ttl`, and then runs `scripts/reload-void.sh` (clears and reloads `graph/void` from every `db/data/void-*.ttl` and republishes `/.well-known/void`). Use `--no-load` to only write the file. See [Generate VoID metadata for the vocabularies graph](#generate-void-metadata-for-the-vocabularies-graph) for what it records.
 
 ### Linked Data and VoID
 
@@ -747,7 +763,9 @@ machine-readable provenance record:
 bash scripts/load-graphs/create-vocabularies-void.sh
 ```
 
-This writes `db/data/void-vocabularies.ttl` and loads it into the `graph/void` named graph. Re-run
+This writes `db/data/void-vocabularies.ttl` and then runs `scripts/reload-void.sh`, which clears and
+reloads the `graph/void` named graph from every `db/data/void-*.ttl` and republishes `/.well-known/void`.
+Run it after `load-vocabularies.sh` (it reads the live triple count and `pmw:` version), and re-run
 whenever `load-vocabularies.sh` is re-run. The TTL records:
 - `dcterms:source` → the four inputs: `wp.owl`, `gpml.owl`, the VoID vocabulary, and `vocab/pmw.ttl`
 - `void:vocabulary` → the `wp:`, `gpml:`, `void:` and `pmw:` namespaces

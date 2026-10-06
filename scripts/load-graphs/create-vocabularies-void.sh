@@ -125,16 +125,15 @@ fi
 echo "  ✔ Written: $VOID_FILE"
 
 # ── Load into Virtuoso ─────────────────────────────────────────────────────────
+# Delegate to reload-void.sh: it clears <graph/void> and reloads every
+# void-*.ttl, then republishes /.well-known/void. Loading only this file would
+# append to the graph (leaving the previous run's dcterms:modified and
+# void:triples next to the new ones) and would not update /.well-known/void.
 if [ "$LOAD" = true ]; then
-  FNAME="$(basename "$VOID_FILE")"
-  docker cp "$VOID_FILE" "${VIRTUOSO_CONTAINER}:/tmp/${FNAME}"
-  isql <<ISQL
-ld_dir('/tmp', '${FNAME}', '${VOID_GRAPH}');
-rdf_loader_run();
-checkpoint;
-SPARQL SELECT (COUNT(*) AS ?triples) WHERE { GRAPH <${VOID_GRAPH}> { ?s ?p ?o } };
-quit;
-ISQL
-  docker exec "$VIRTUOSO_CONTAINER" rm -f "/tmp/${FNAME}"
-  echo "  ✔ Loaded into <${VOID_GRAPH}>"
+  if [ "$VOID_FILE" != "${HOST_DATA_DIR}/void-vocabularies.ttl" ]; then
+    echo "  [SKIP] --output is outside db/data/void-*.ttl; not loading. Copy it there and run scripts/reload-void.sh."
+  else
+    bash "${REPO_ROOT}/scripts/reload-void.sh"
+    echo "  ✔ Loaded into <${VOID_GRAPH}>"
+  fi
 fi

@@ -177,8 +177,7 @@ echo "── Loading files ─────────────────�
 
 shopt -s nullglob
 SMALL_GLOBS=(
-  "$DATA_DIR"/void-plantcyc*.ttl
-  "$DATA_DIR"/void-bgc.ttl
+  "$DATA_DIR"/void-*.ttl                              # all VoID, as reload-void.sh
   "$DATA_DIR"/all_gpml_taxonomy_extra-plantcyc*.ttl
   "$DATA_DIR"/plantismash.ttl
   "$DATA_DIR"/mibig.ttl
@@ -234,7 +233,7 @@ check_graphs
 echo ""
 echo "── Publishing merged VoID at well-known URI ──────────────────────────"
 shopt -s nullglob
-VOID_FILES=("$DATA_DIR"/void-plantcyc*.ttl "$DATA_DIR"/void-bgc.ttl "$DATA_DIR"/void-ncbitaxon.ttl)
+VOID_FILES=("$DATA_DIR"/void-*.ttl)
 shopt -u nullglob
 if [[ ${#VOID_FILES[@]} -gt 0 ]]; then
   if docker ps --format "{{.Names}}" | grep -q "^${SNORQL_CONTAINER}$"; then
