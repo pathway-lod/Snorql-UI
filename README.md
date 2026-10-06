@@ -292,6 +292,16 @@ bash scripts/load-plantmetwiki-data.sh --check
 
 This prints triple counts per named graph. Check that the numbers are plausible (core pathway graph should be in the tens of millions of triples).
 
+### Vocabularies
+
+`load-plantmetwiki-data.sh` also runs `scripts/load-graphs/load-vocabularies.sh` (disable with `LOAD_VOCABULARIES=false`). It loads the WikiPathways `wp:`/`gpml:` vocabularies, the VoID vocabulary and the PlantMetWiki vocabulary (`vocab/pmw.ttl`) into `graph/vocabularies`, so the classes used in the data have `rdfs:label`s. It can be run on its own at any time.
+
+### Linked Data and VoID
+
+- The merged VoID is published at `/.well-known/void` (served as `text/turtle`) by the load scripts; `bash scripts/reload-void.sh` republishes it.
+- Resource IRIs under `http://rdf-plantmetwiki.bioinformatics.nl/` (`/pathways/`, `/Pathway/`, `/id/`, `/dataset/`, `/vocab/`, …) are dereferenceable: `httpd-proxy.conf` answers RDF requests (`Accept: text/turtle`, `application/rdf+xml`, `application/n-triples`) with the resource's triples from Virtuoso, and redirects browsers to the explorer with a query for the resource filled in.
+- The PlantMetWiki vocabulary (`vocab/pmw.ttl`) is served as Turtle at its namespace URI, `/vocab/`.
+
 ---
 
 ## Customization
