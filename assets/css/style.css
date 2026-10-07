@@ -124,8 +124,16 @@ footer p{
 }
 
 .badge-icon {
-    height: 22px;            /* same height as the other footer logos */
+    height: 22px;            /* default height of the footer logos */
     width: auto;
+}
+
+.yummydata-icon {
+    height: 28px;            /* the lollipop is detailed: a little larger */
+}
+
+.fair-checker-icon {
+    height: 17px;            /* wide wordmark: smaller so it stays compact */
 }
 
 .zenodo-icon {
@@ -140,10 +148,6 @@ footer p{
     align-items: center;
     gap: 4px 22px;
     font-size: 13px;
-}
-
-#footer.footer .footer-license a {
-    color: inherit;
 }
 
 #footer.footer .footer-cite {
@@ -163,10 +167,14 @@ footer p{
     color: #555;
 }
 
+.footer-cc0-link {
+    display: inline-flex;
+    align-items: center;
+}
+
 .footer-cc0 {
-    height: 16px;
-    margin-left: 3px;
-    vertical-align: text-bottom;
+    height: 22px;
+    width: auto;
 }
 
 #footer.footer .footer-line {
