@@ -30,6 +30,7 @@
 	        { "@id": "http://purl.obolibrary.org/obo/NCBITaxon_33090", "name": "Viridiplantae" }
 	      ],
 	      "license": "https://plantcyc.org/?webform=license-agreement",
+	      "citation": { "@id": "https://doi.org/10.64898/2026.07.22.733699" },
 	      "conditionsOfAccess": "Open access; no registration required.",
 	      "isAccessibleForFree": true,
 	      "creator": {
@@ -43,6 +44,28 @@
 	        { "@type": "SoftwareSourceCode", "name": "PlantCyc to WikiPathways: BioCyc flat-file to GPML2021 conversion pipeline", "identifier": "https://doi.org/10.5281/zenodo.18404067" },
 	        { "@type": "ScholarlyArticle", "name": "WikiPathways 2024: next generation pathway database", "identifier": "https://doi.org/10.1093/nar/gkad960" }
 	      ],
+	      "subjectOf": [
+	        {
+	          "@type": "ScholarlyArticle",
+	          "@id": "https://doi.org/10.64898/2026.07.22.733699",
+	          "name": "PlantMetWiki: a FAIR knowledge graph for plant metabolic pathway cross-species representation and integration",
+	          "identifier": "https://doi.org/10.64898/2026.07.22.733699",
+	          "url": "https://doi.org/10.64898/2026.07.22.733699",
+	          "datePublished": "2026-07-26",
+	          "isPartOf": { "@type": "Periodical", "name": "bioRxiv" },
+	          "license": "https://creativecommons.org/licenses/by/4.0/",
+	          "author": [
+	            { "@type": "Person", "name": "Elena Del Pup" },
+	            { "@type": "Person", "name": "Max Muller" },
+	            { "@type": "Person", "name": "Marvin Martens" },
+	            { "@type": "Person", "name": "Egon L. Willighagen" },
+	            { "@type": "Person", "name": "Marnix H. Medema" },
+	            { "@type": "Person", "name": "Denise Slenter" },
+	            { "@type": "Person", "name": "Justin J.J. van der Hooft" }
+	          ]
+	        },
+	        { "@type": "CreativeWork", "name": "VoID description", "url": "https://plantmetwiki.bioinformatics.nl/.well-known/void", "encodingFormat": "text/turtle" }
+	      ],
 	      "hasPart": [
 	        { "@type": "Dataset", "name": "PlantMetWiki BGC crosslinks: MIBiG 4.0", "url": "https://mibig.secondarymetabolites.org/", "license": "https://creativecommons.org/licenses/by/4.0/" },
 	        { "@type": "Dataset", "name": "PlantMetWiki BGC crosslinks: plantiSMASH v2", "url": "https://plantismash.bioinformatics.nl/", "license": "https://www.gnu.org/licenses/gpl-3.0.en.html" }
@@ -50,8 +73,7 @@
 	      "distribution": [
 	        { "@type": "DataDownload", "name": "SPARQL endpoint", "contentUrl": "https://plantmetwiki.bioinformatics.nl/sparql", "encodingFormat": "application/sparql-results+json" },
 	        { "@type": "DataDownload", "name": "RDF release (Zenodo)", "contentUrl": "https://doi.org/10.5281/zenodo.17967619", "encodingFormat": "text/turtle" }
-	      ],
-	      "subjectOf": { "@type": "CreativeWork", "name": "VoID description", "url": "https://plantmetwiki.bioinformatics.nl/.well-known/void", "encodingFormat": "text/turtle" }
+	      ]
 	    },
 	    {
 	      "@type": "WebApplication",
@@ -117,6 +139,11 @@
 		<a class="nav-tutorial-link" 
 			href="https://pathway-lod.github.io/SPARQLTutorials/">
 			📘 Tutorial
+		</a>
+		<a class="nav-tutorial-link" target="_blank" rel="noopener"
+			href="https://doi.org/10.64898/2026.07.22.733699"
+			title="Read the PlantMetWiki preprint on bioRxiv">
+			📄 Paper
 		</a>
 		</div>
       </div>
@@ -222,6 +249,11 @@
 	<footer id="footer" class="footer navbar-fixed-bottom">
 	  <div class="container-fluid">
 		<p class="footer-line">
+		<strong>Please cite:</strong>
+		Del Pup E, Muller M, Martens M, Willighagen EL, Medema MH, Slenter D, van der Hooft JJJ.
+		PlantMetWiki: a FAIR knowledge graph for plant metabolic pathway cross-species representation and integration.
+		<em>bioRxiv</em> (2026)
+		<a target="_blank" rel="noopener" href="https://doi.org/10.64898/2026.07.22.733699">doi:10.64898/2026.07.22.733699</a> —
 		Powered by
 		<a target="_blank" href="https://wikipathways.org/">WikiPathways</a>
 		(doi:<a target="_blank" href="https://doi.org/10.1093/nar/gkad960">10.1093/nar/gkad960</a>)

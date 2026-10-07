@@ -97,6 +97,10 @@ footer p{
   border-top: 1px solid #e7e7e7;
   padding: 8px 15px;
   z-index: 1030;          /* above content but below modals */
+  height: auto;           /* grow with the text: it now also carries the citation */
+  min-height: 80px;
+  max-height: 40vh;       /* never cover more than part of a small screen */
+  overflow-y: auto;
 }
 
 /* Ensure text wraps and both lines are visible */
@@ -129,7 +133,7 @@ footer p{
 }
 
 #result{
-  margin-bottom: 50px;
+  margin-bottom: 130px;   /* clear the fixed footer (it now includes the citation) */
 }
 
 .row{
