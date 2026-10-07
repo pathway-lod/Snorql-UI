@@ -97,8 +97,7 @@ footer p{
   border-top: 1px solid #e7e7e7;
   padding: 8px 15px;
   z-index: 1030;          /* above content but below modals */
-  height: auto;           /* grow with the text: it now also carries the citation */
-  min-height: 80px;
+  height: auto;           /* grow with the content instead of a fixed height */
   max-height: 40vh;       /* never cover more than part of a small screen */
   overflow-y: auto;
 }
@@ -112,13 +111,46 @@ footer p{
 
 
 .github-icon {
-    height: 18px;
-    width: 18px;
-    margin-right: 5px;
+    height: 22px;
+    width: 22px;
+    vertical-align: middle;
 }
 
 .footer-github {
+    display: inline-flex;
     align-items: center;
+}
+
+/* Tier 1: the links row */
+#footer.footer .footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 22px;
+    font-size: 13px;
+}
+
+#footer.footer .footer-cite {
+    margin-left: auto;       /* push the citation to the right on wide screens */
+    color: #444;
+}
+
+/* Tier 2: small print */
+#footer.footer .footer-credits {
+    margin-top: 4px;
+    font-size: 11px;
+    line-height: 1.35;
+    color: #777;
+}
+
+#footer.footer .footer-credits a {
+    color: #555;
+}
+
+.footer-cc0 {
+    height: 14px;
+    margin-left: 3px;
+    vertical-align: text-bottom;
 }
 
 #footer.footer .footer-line {
@@ -130,10 +162,14 @@ footer p{
   #footer.footer {
     font-size: 12px;
   }
+  #footer.footer .footer-cite {
+    margin-left: 0;          /* citation wraps under the links */
+    flex-basis: 100%;
+  }
 }
 
 #result{
-  margin-bottom: 130px;   /* clear the fixed footer (it now includes the citation) */
+  margin-bottom: 100px;   /* clear the fixed footer */
 }
 
 .row{
