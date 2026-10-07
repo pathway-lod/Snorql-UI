@@ -129,11 +129,11 @@ footer p{
 }
 
 .yummydata-icon {
-    height: 28px;            /* the lollipop is detailed: a little larger */
+    height: 22px;            /* same as the other footer icons */
 }
 
 .fair-checker-icon {
-    height: 17px;            /* wide wordmark: smaller so it stays compact */
+    height: 20px;            /* wide wordmark: a bit smaller than the icons to stay compact */
 }
 
 .zenodo-icon {
