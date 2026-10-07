@@ -117,15 +117,20 @@ footer p{
 }
 
 .footer-github,
-.footer-zenodo {
+.footer-zenodo,
+.footer-badge {
     display: inline-flex;
     align-items: center;
 }
 
-.zenodo-icon {
-    height: 22px;            /* same height as the GitHub mark */
+.badge-icon {
+    height: 22px;            /* same height as the other footer logos */
     width: auto;
-    border-radius: 3px;
+}
+
+.zenodo-icon {
+    height: 22px;            /* same size as the GitHub mark */
+    width: 22px;
 }
 
 /* Tier 1: the links row */
