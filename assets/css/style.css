@@ -116,9 +116,16 @@ footer p{
     vertical-align: middle;
 }
 
-.footer-github {
+.footer-github,
+.footer-zenodo {
     display: inline-flex;
     align-items: center;
+}
+
+.zenodo-icon {
+    height: 22px;            /* same height as the GitHub mark */
+    width: auto;
+    border-radius: 3px;
 }
 
 /* Tier 1: the links row */
@@ -128,6 +135,10 @@ footer p{
     align-items: center;
     gap: 4px 22px;
     font-size: 13px;
+}
+
+#footer.footer .footer-license a {
+    color: inherit;
 }
 
 #footer.footer .footer-cite {
@@ -148,7 +159,7 @@ footer p{
 }
 
 .footer-cc0 {
-    height: 14px;
+    height: 16px;
     margin-left: 3px;
     vertical-align: text-bottom;
 }
