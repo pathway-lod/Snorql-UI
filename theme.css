@@ -1,0 +1,132 @@
+/*
+ * PlantMetWiki SPARQL Explorer theme, loaded after the engine's style.css.
+ * Logo, links and footer content come from config.js; this file only styles them.
+ */
+
+/* ---- Navbar: logo with the two-line title next to it ---- */
+
+.navbar-default > .container {
+    display: flex !important;   /* the engine sets inline-block and a fixed height inline */
+    align-items: center;
+    height: auto !important;
+    width: 100%;
+    min-height: 100px;
+}
+
+.navbar-default .navbar-header {
+    float: none;
+}
+
+/* The title is not in the markup: it is drawn next to the logo, which keeps index.html
+   the engine's own. The logo's alt text ("PlantMetWiki") names the page for screen readers. */
+#index-page.navbar-brand {
+    display: grid !important;
+    grid-template-columns: auto auto;
+    grid-template-rows: auto auto;
+    column-gap: 10px;
+    align-items: center;
+    height: auto !important;
+    padding: 5px 15px !important;
+}
+
+#index-page img {
+    grid-row: 1 / span 2;
+    height: 90px;
+    width: auto;
+}
+
+#index-page::before {
+    content: "Plant Metabolic Pathways Wiki";
+    grid-column: 2;
+    grid-row: 1;
+    align-self: end;
+    font-size: 18px;
+    line-height: 1.1;
+    color: #555;
+}
+
+#index-page::after {
+    content: "SPARQL Explorer";
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;
+    font-size: 14px;
+    line-height: 1.1;
+    color: #555;
+    opacity: 0.85;
+}
+
+.navbar-default .navbar-collapse {
+    flex: 1;
+}
+
+#navbar-linkouts > li > a {
+    font-size: 17px;
+    padding-top: 15px;
+    padding-bottom: 15px;
+    color: #333;
+}
+
+#navbar-linkouts > li > a:hover {
+    color: #0077cc;
+    text-decoration: underline;
+}
+
+/* ---- Footer: links row with the citation, then small print ---- */
+
+#footer.footer {
+    background-color: #f8f8f8;
+    border-top: 1px solid #e7e7e7;
+    padding: 6px 15px;
+}
+
+#footer .footer-row {
+    margin: 0;
+    line-height: 1.4;
+}
+
+#footer .footer-row:first-child {
+    font-size: 13px;
+    color: #444;
+}
+
+#footer .footer-row:first-child img {
+    vertical-align: middle;
+    width: auto;
+}
+
+#footer .footer-row:first-child a {
+    margin-right: 14px;
+}
+
+#footer .footer-row:first-child a:last-child {
+    margin-right: 0;
+}
+
+#footer .footer-row + .footer-row {
+    margin-top: 3px;
+    font-size: 11px;
+    color: #777;
+}
+
+#footer .footer-row + .footer-row a {
+    color: #555;
+}
+
+/* Room for the two-line fixed footer. */
+#result {
+    margin-bottom: 100px;
+}
+
+@media (max-width: 768px) {
+    #footer.footer {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 600px) {
+    .navbar-default > .container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

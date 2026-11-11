@@ -1,38 +1,17 @@
-FROM httpd:2.4
- 
-ADD ./assets /usr/local/apache2/htdocs/assets/
-COPY ./cookies.html /usr/local/apache2/htdocs/
-COPY ./index.html /usr/local/apache2/htdocs/
-COPY ./sd.ttl /usr/local/apache2/htdocs/sd.ttl
-COPY ./vocab/pmw.ttl /usr/local/apache2/htdocs/vocab/pmw.ttl
- 
-ENV PATH /usr/local/apache2/bin:$PATH
+# PlantMetWiki SPARQL Explorer: the Snorql-UI engine (wikipathways/Snorql-UI) plus
+# PlantMetWiki's configuration, theme, images and metadata, and the Apache config that
+# puts the explorer in front of Virtuoso (SPARQL proxy, service description, VoID,
+# dereferenceable IRIs, example IRIs). Updating the engine is a change of ENGINE.
+ARG ENGINE=ghcr.io/wikipathways/snorql-ui:1.4.1
+FROM ${ENGINE}
 
-# NOTE: deliberately no VOLUME for /usr/local/apache2/htdocs here — Docker/Compose
-# preserves an existing anonymous volume's contents across container recreation,
-# which silently shadows anything newly added to htdocs by this Dockerfile (bit
-# us with sd.ttl and .well-known/void going stale after a rebuild). Nothing here
-# needs htdocs to persist across recreations: script.sh regenerates its sed edits
-# on every start, and .well-known/void is republished by the data-load scripts.
+COPY config.js /usr/local/apache2/htdocs/assets/js/config.js
+COPY theme.css /usr/local/apache2/htdocs/assets/css/theme.css
+COPY images/ /usr/local/apache2/htdocs/assets/images/
+COPY head-extra.html /usr/local/apache2/htdocs/head-extra.html
+COPY sd.ttl /usr/local/apache2/htdocs/sd.ttl
+COPY vocab/pmw.ttl /usr/local/apache2/htdocs/vocab/pmw.ttl
 
-EXPOSE 80 443
-
-WORKDIR /app
- 
-COPY ./script.sh /app/script.sh
-
-RUN chmod 755 /app/script.sh
-RUN chmod +x /app/script.sh
-
-COPY ./entrypoint.sh /app/entrypoint.sh
-
-RUN chmod 755 /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
-
-# Copy proxy configuration for /sparql -> Virtuoso
-COPY ./httpd-proxy.conf /usr/local/apache2/conf/extra/httpd-proxy.conf
- 
-# Include proxy config in main httpd.conf
+# /sparql -> Virtuoso and the other routes; see httpd-proxy.conf.
+COPY httpd-proxy.conf /usr/local/apache2/conf/extra/httpd-proxy.conf
 RUN echo "Include conf/extra/httpd-proxy.conf" >> /usr/local/apache2/conf/httpd.conf
-
-ENTRYPOINT ["/app/entrypoint.sh"]
