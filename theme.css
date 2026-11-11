@@ -124,9 +124,21 @@
     }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 767px) {
+    /* Phones: logo and the menu button on one row; the links and the endpoint field open below. */
     .navbar-default > .container {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
+    }
+    .navbar-default .navbar-header {
+        display: flex;
+        align-items: center;
+    }
+    .navbar-default .navbar-toggle {
+        order: 2;
+        margin-left: auto;
+    }
+    #index-page img {
+        height: 60px;
     }
 }
