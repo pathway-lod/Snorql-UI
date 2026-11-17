@@ -1,8 +1,9 @@
 # PlantMetWiki SPARQL Explorer: the Snorql-UI engine (wikipathways/Snorql-UI) plus
 # PlantMetWiki's configuration, theme, images and metadata, and the Apache config that
 # puts the explorer in front of Virtuoso (SPARQL proxy, service description, VoID,
-# dereferenceable IRIs, example IRIs). Updating the engine is a change of ENGINE.
-ARG ENGINE=ghcr.io/wikipathways/snorql-ui:1.4.1
+# dereferenceable IRIs, example IRIs). Updating the engine is a change of ENGINE;
+# docker compose passes SNORQL_ENGINE (.env, default in docker-compose.yml) instead.
+ARG ENGINE=ghcr.io/wikipathways/snorql-ui:1.5.1
 FROM ${ENGINE}
 
 COPY config.js /usr/local/apache2/htdocs/assets/js/config.js

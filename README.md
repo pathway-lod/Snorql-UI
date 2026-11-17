@@ -26,8 +26,11 @@ copied on top of that image by the `Dockerfile`:
 | `sd.ttl`, `vocab/pmw.ttl` | SPARQL service description and the PlantMetWiki vocabulary |
 | `scripts/`, `plantmetwiki-*.sh` | Loading the PlantMetWiki data into Virtuoso |
 
-Updating the engine is a change of its tag (`ENGINE` in the `Dockerfile`, or `SNORQL_ENGINE` in
-`.env`). The engine's own documentation, including all `config.js` options, is in its
+Updating the engine is a change of its tag. With docker compose, the tag comes from
+`SNORQL_ENGINE` in `.env` (default in `docker-compose.yml`), which overrides the `ENGINE` default
+in the `Dockerfile`; keep the three the same. After changing it, rebuild the explorer with
+`docker compose up -d --build snorql`. The engine's own documentation, including all `config.js`
+options, is in its
 [FORK.md](https://github.com/wikipathways/Snorql-UI/blob/master/FORK.md).
 
 `node test/check-config.js` checks `config.js`, the images it refers to and the JSON-LD.
@@ -132,7 +135,7 @@ All variables can be set in `.env`, exported in your shell, or hardcoded in `doc
 |----------|---------|-------------|
 | `SNORQL_CONTAINER` | `my-snorql` | Docker container name |
 | `SNORQL_PORT` | `8088` | HTTP port for web interface |
-| `SNORQL_ENGINE` | `ghcr.io/wikipathways/snorql-ui:1.4.1` | Engine image the explorer is built on |
+| `SNORQL_ENGINE` | `ghcr.io/wikipathways/snorql-ui:1.5.1` | Engine image the explorer is built on |
 | `SNORQL_ENDPOINT` | (empty: `config.js`) | SPARQL endpoint URL (as seen from browser) |
 | `SNORQL_EXAMPLES_REPO` | (empty: `config.js`) | GitHub repository with the example queries |
 | `SNORQL_EXAMPLES_INDEX_URL` | (empty) | Base URL of the examples index, when not the repository's `examples-index` branch |
@@ -283,7 +286,7 @@ It reads the triple count and the `pmw:` version from Virtuoso, writes `db/data/
 | Namespaces shown as prefixes in results | `config.js` (`namespaces`) |
 | Autocomplete lists for example parameters | `config.js` (`autocompleteTypes`) |
 | Structured data in the page | `head-extra.html` |
-| Engine version | `ENGINE` in the `Dockerfile` / `SNORQL_ENGINE` in `.env` |
+| Engine version | `SNORQL_ENGINE` in `.env` (default in `docker-compose.yml`, `ENGINE` in the `Dockerfile` for a plain `docker build`), then `docker compose up -d --build snorql` |
 
 ## Loading RDF Data
 
