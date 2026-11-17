@@ -409,16 +409,16 @@ scripts/enable-cors.sh                  # allow browser queries to the local Vir
 
 ### Step 1 — Configure `.env`
 
-Copy `.env.example` to `.env` and verify the variables match your local setup. The defaults work out of the box:
+Copy `.env.example` to `.env` and check that the variables match your local setup:
 
 ```bash
 cp .env.example .env
 ```
 
-Key values for local development:
+To query the local Virtuoso, set `SNORQL_ENDPOINT` in `.env`. Left empty, it keeps the production
+endpoint from `config.js`. Key values for local development:
 ```
-SNORQL_ENDPOINT=http://localhost:8890/sparql   # local Virtuoso
-SNORQL_EXAMPLES_REPO=https://github.com/pathway-lod/SPARQLQueries
+SNORQL_ENDPOINT=http://localhost:8890/sparql   # local Virtuoso (empty = production endpoint)
 VIRTUOSO_HTTP_PORT=8890
 SNORQL_PORT=8088
 ```
@@ -487,7 +487,8 @@ docker compose up -d --build snorql
 
 Then open **http://localhost:8088/**. With `SNORQL_ENDPOINT=http://localhost:8890/sparql` in `.env`
 the explorer queries your local Virtuoso; with the variable empty it uses the production endpoint
-from `config.js`. After changing `.env`, run the same command again.
+from `config.js`. After changing `.env`, run the same command again, then
+`bash scripts/reload-void.sh` to put `/.well-known/void` back (it lives in the container, not in the image).
 
 ### Refreshing the data after a new release
 
@@ -627,14 +628,14 @@ ORDER BY DESC(?n)
 
 ### Legacy data loading (kept for compatibility)
 
-The older container-rebuild flow is still present:
+The older start-and-load scripts are still present:
 
 ```bash
 ./plantmetwiki-rebuild.sh       # starts the stack and enables CORS (does not rebuild the snorql image)
 ./plantmetwiki-upload-data.sh   # loads data using the old loader
 ```
 
-The script-based workflow above is recommended for development because it avoids rebuilding the container on every change.
+The script-based workflow above is recommended instead.
 
 ## Deploying Production Hostnames for PlantMetWiki
 
@@ -650,7 +651,11 @@ the image (`config.js`, `theme.css`, `images/`, `head-extra.html`, `httpd-proxy.
 
 ```bash
 docker compose up -d --build snorql
+bash scripts/reload-void.sh   # republish /.well-known/void, which lives in the container
 ```
+
+The rebuild recreates the snorql container, and the merged VoID at `/.well-known/void` is not part of
+the image, so it returns 404 until `reload-void.sh` copies it back in.
 
 `./plantmetwiki-rebuild.sh up` runs `docker compose up -d` without `--build`, so on its own it keeps
 the existing snorql image and does not pick up such changes.
