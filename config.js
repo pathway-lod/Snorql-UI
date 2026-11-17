@@ -26,7 +26,7 @@ window.SNORQL_CONFIG = {
         enableSMILESRenderer: false
     },
     // Optional navbar linkout buttons, rendered in array order by linkouts.js.
-    // Keep the live default EMPTY so existing deployments render unchanged.
+    // PlantMetWiki sets two: the SPARQL tutorial and the preprint.
     // Each entry: { label, url, authors?, icon? }
     //   label   - button text (shown as plain text; HTML is escaped)
     //   url     - http/https/mailto only; other schemes (javascript:/data:) are rejected
@@ -45,7 +45,7 @@ window.SNORQL_CONFIG = {
         { label: "Paper", url: "https://doi.org/10.64898/2026.07.22.733699", icon: "file",
           authors: "Read the PlantMetWiki preprint on bioRxiv" }
     ],
-    // WikiPathways label for the endpoint field; index.html keeps the generic default.
+    // Label for the endpoint field.
     endpointLabel: "SPARQL Endpoint:",
     logo: { src: "assets/images/plantmetwiki-logo.png", alt: "PlantMetWiki", height: 90 },
     metaDescription: "SPARQL Explorer for PlantMetWiki, a FAIR knowledge graph of plant metabolic pathways",
