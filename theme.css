@@ -141,4 +141,13 @@
     #index-page img {
         height: 60px;
     }
+    /* The footer wraps to several lines here, more than the engine's fixed 50px:
+       let it grow and sit after the content instead of covering the screen. */
+    #footer.footer {
+        position: static;
+        height: auto;
+    }
+    #result {
+        margin-bottom: 20px;
+    }
 }
