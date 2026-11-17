@@ -1,95 +1,59 @@
-## Snorql-UI - A SPARQL Explorer for PlantMetWiki (Plant Metabolic Patways Wiki)
+## PlantMetWiki SPARQL Explorer
 
-Simple SPARQL query interface based on the original idea of [kurtjx/SNORQL](https://github.com/kurtjx/SNORQL) and adapted from the fork [eccenca/SNORQL](https://github.com/eccenca/SNORQL)
+The SPARQL Explorer of PlantMetWiki (Plant Metabolic Pathways Wiki), and the Docker setup that
+serves it in front of the PlantMetWiki Virtuoso endpoint.
 
-The purpose of this project is to develop a fully new UI implementation for Snorql that uses the latest web standards for HTML5, CSS3 and JQuery, and add new productivity features to facilitate query retrieval and sharing.
-
-**PlantMetWiki Live Instance:** [sparql-plantmetwiki.bioinformatics.nl](https://sparql-plantmetwiki.bioinformatics.nl/)
+**Live instance:** [plantmetwiki.bioinformatics.nl](https://plantmetwiki.bioinformatics.nl/)
 
 **Local instance (Docker):**
-- Snorql UI: http://localhost:8089
+- Explorer: http://localhost:8088 (or `SNORQL_PORT`)
 - Virtuoso SPARQL endpoint: http://localhost:8890/sparql
 
-**Upstream Demo:** [Demo 1](https://wikipathways.github.io/Snorql-UI) | [Demo 2](https://ammar257ammar.github.io/Snorql-UI)
+## How this repository is built
 
+The explorer itself is the shared Snorql-UI engine,
+[wikipathways/Snorql-UI](https://github.com/wikipathways/Snorql-UI), published as the Docker
+image `ghcr.io/wikipathways/snorql-ui`. This repository holds only what is PlantMetWiki's own,
+copied on top of that image by the `Dockerfile`:
 
-## Features
+| File | What it is |
+|---|---|
+| `config.js` | Endpoint, examples repository, branding (logo, footer), navbar links, namespaces, autocomplete |
+| `theme.css` | PlantMetWiki styling (header with title, footer) |
+| `images/` | Logo and footer icons |
+| `head-extra.html` | schema.org JSON-LD for FAIR assessment tools, inserted into the page's `<head>` |
+| `httpd-proxy.conf` | Apache: `/sparql` to Virtuoso, service description, VoID, dereferenceable IRIs, example IRIs |
+| `sd.ttl`, `vocab/pmw.ttl` | SPARQL service description and the PlantMetWiki vocabulary |
+| `scripts/`, `plantmetwiki-*.sh` | Loading the PlantMetWiki data into Virtuoso |
 
-1.  Modern web UI built with [HTML5](https://en.wikipedia.org/wiki/HTML5), [Bootstrap](https://getbootstrap.com/docs/3.3/getting-started/) and [JQuery](https://jquery.com/).
-2.  Responsive design with wonderful look on mobiles and tablets.
-3.  Text editor [CodeMirror](https://codemirror.net/) for the SPARQL query with awesome features like SPARQL syntax highlighter, line numbering and bracket matching.
-4.  SPARQL examples panel that can fetch SPARQL queries (.rq extension) from any GitHub repository on the fly and execute them against the SPARQL endpoint of your choice.
-5.  Export query results into multiple file formats.
-6.  Generate short URLs for your queries for easy sharing.
-7.  No need for any backend programming language!! it is totally a front end application.
+Updating the engine is a change of its tag (`ENGINE` in the `Dockerfile`, or `SNORQL_ENGINE` in
+`.env`). The engine's own documentation, including all `config.js` options, is in its
+[FORK.md](https://github.com/wikipathways/Snorql-UI/blob/master/FORK.md).
 
+`node test/check-config.js` checks `config.js`, the images it refers to and the JSON-LD.
 
-## GitHub Examples URL
+## SPARQL examples
 
-- If you have the SPARQL queries directly inside the repo, then use the full the URL of the repo like the following:
+The examples panel shows the queries of
+[pathway-lod/SPARQLQueries](https://github.com/pathway-lod/SPARQLQueries). Each example is a
+Turtle file with a permanent identifier (`PMWQ012`), a version and metadata; the explorer reads
+the index that the repository's CI publishes on its `examples-index` branch. How to write one is
+described in that repository's `AUTHORING.md`.
 
-  [https://github.com/pathway-lod/SPARQLQueries](https://github.com/pathway-lod/SPARQLQueries)
-
-
-- But in case the SPARQL queries are inside a folder in the repository, then you need to provide a GitHub API URL for that folder and that is constructed as follows:
-
-  If the URL of the folder of the queries is this (for example):
-
-  https://github.com/egonw/SARS-CoV-2-Queries/tree/main/sparql
-
-  Then the URL template you should use is:
-
-  https://api.github.com/repos/{OWNER_USER}/{REPOSITORY_NAME}/contents/{FOLDER_PATH}
-
-  And the final URL becomes like this:
-
-  https://api.github.com/repos/egonw/SARS-CoV-2-Queries/contents/sparql
-
-
-## SPARQL Examples Repository Structure
-
-The examples panel fetches `.rq` files from GitHub repositories. Here's how to structure your repository:
-
-### File Conventions
-- Use `.rq` extension for SPARQL query files
-- Use descriptive filenames (spaces allowed): `Get all metabolites.rq`
-- First line comment becomes the query description in the panel
-
-### Folder Organization
-
-Organize queries into folders by category:
-
-```
-sparql-queries/
-├── Basic/
-│   ├── List all classes.rq
-│   └── Count triples.rq
-├── Metabolites/
-│   ├── Get all metabolites.rq
-│   └── Metabolites by pathway.rq
-└── Advanced/
-    └── Federated query example.rq
-```
-
-### Tree View Behavior
-- Folders become expandable nodes in the examples panel
-- Files appear as clickable query items
-- Nested folders are fully supported
-- Alphabetical ordering within each level
-
-### Example Repositories
-- PlantMetWiki: https://github.com/pathway-lod/SPARQLQueries
-- WikiPathways: https://github.com/wikipathways/SPARQLQueries
-- SARS-CoV-2: https://api.github.com/repos/egonw/SARS-CoV-2-Queries/contents/sparql
-
+- Link to an example: `https://plantmetwiki.bioinformatics.nl/?example=PMWQ012`, or a version of
+  it: `&version=1.0.0`. Old links with a file path (`?example=2.PlantMetWiki/....rq`) still work.
+- Each example also has an IRI,
+  `https://plantmetwiki.bioinformatics.nl/.well-known/sparql-examples/PMWQ012`: browsers are sent
+  to the explorer, RDF clients asking for Turtle to the whole collection at
+  `https://plantmetwiki.bioinformatics.nl/.well-known/sparql-examples` (see `httpd-proxy.conf`).
 
 ## Get a URL for a query with JavaScript
 
 - if you want to get a URL for your query (automatically generated for example) without using the permanent link, then you can use the following JavaScript code:
 
 ```javascript
-// the SPARQL endpoint URL followed by the query variable 'q'
-let endpoint = "https://sparql-plantmetwiki.bioinformatics.nl/?q=";
+// the explorer URL followed by the query variable 'q'
+let endpoint = "https://plantmetwiki.bioinformatics.nl/?q=";
 
 // The SPARQL query itself
 let sparql = `SELECT DISTINCT ?dataset (str(?titleLit) as ?title) ?date ?license
@@ -102,37 +66,24 @@ WHERE {
    }
 }`;
 
-// create the URL from the endpoint URL and the URI-encoded query string
+// create the URL from the explorer URL and the URI-encoded query string
 let encodedQueryUrl = endpoint + encodeURI(sparql);
-
-// now, encodedQueryUrl can be used for your own purpose
 ```
 
 
 ## Quick Start
 
-### Option 1: Static Files (No Docker)
-
-1. Clone the repository
-2. Edit `assets/js/snorql.js` and set:
-   - `_endpoint` - Your SPARQL endpoint URL
-   - `_examples_repo` - GitHub repo with .rq example files
-3. Open `index.html` in a browser or serve via any HTTP server
-
-### Option 2: Docker Compose
-
-1. Copy the example configuration files:
+1. Copy the example configuration:
    ```bash
-   cp docker-compose.example.yml docker-compose.yml
    cp .env.example .env
    ```
-2. Edit `.env` with your settings (or edit `docker-compose.yml` directly)
+2. Edit `.env` if needed. Empty `SNORQL_*` values keep the PlantMetWiki settings of `config.js`;
+   set `SNORQL_ENDPOINT=http://localhost:8890/sparql` to use the local Virtuoso.
 3. Start the services:
    ```bash
-   docker compose up -d
+   docker compose up -d --build
    ```
-4. Access the UI at http://localhost:8088 (or whichever port you set as `SNORQL_PORT` in `.env`)
-
+4. Open http://localhost:8088 (or whichever port you set as `SNORQL_PORT` in `.env`)
 
 ## Configuration
 
@@ -181,9 +132,11 @@ All variables can be set in `.env`, exported in your shell, or hardcoded in `doc
 |----------|---------|-------------|
 | `SNORQL_CONTAINER` | `my-snorql` | Docker container name |
 | `SNORQL_PORT` | `8088` | HTTP port for web interface |
-| `SNORQL_ENDPOINT` | `http://localhost:8890/sparql` | SPARQL endpoint URL (as seen from browser) |
-| `SNORQL_EXAMPLES_REPO` | - | GitHub repo with .rq example files |
-| `SNORQL_TITLE` | `My SPARQL Explorer` | Browser tab title |
+| `SNORQL_ENGINE` | `ghcr.io/wikipathways/snorql-ui:1.4.1` | Engine image the explorer is built on |
+| `SNORQL_ENDPOINT` | (empty: `config.js`) | SPARQL endpoint URL (as seen from browser) |
+| `SNORQL_EXAMPLES_REPO` | (empty: `config.js`) | GitHub repository with the example queries |
+| `SNORQL_EXAMPLES_INDEX_URL` | (empty) | Base URL of the examples index, when not the repository's `examples-index` branch |
+| `SNORQL_TITLE` | (empty: `config.js`) | Browser tab title |
 | `DEFAULT_GRAPH` | (empty) | Default RDF graph |
 
 **Virtuoso Settings:**
@@ -201,7 +154,7 @@ All variables can be set in `.env`, exported in your shell, or hardcoded in `doc
 
 ### URL Parameters
 
-You can override the SPARQL endpoint via URL parameter:
+`?example=PMWQ012` opens an example (see [SPARQL examples](#sparql-examples)). You can override the SPARQL endpoint via URL parameter:
 ```
 http://localhost:8088/?endpoint=http://other-endpoint/sparql
 ```
@@ -322,37 +275,15 @@ It reads the triple count and the `pmw:` version from Virtuoso, writes `db/data/
 
 ## Customization
 
-| Change | File | What to Modify |
-|--------|------|----------------|
-| SPARQL endpoint | `assets/js/snorql.js` | `_endpoint` variable |
-| Examples repo | `assets/js/snorql.js` | `_examples_repo` variable |
-| Page title | `index.html` | `<title>` tag |
-| Logo | `assets/images/` | Replace logo files |
-| Footer | `index.html` | Edit footer section |
-| Namespaces | `assets/js/namespaces.js` | `snorql_namespacePrefixes` object |
-| Bitly token | `assets/js/script.js` | `accessToken` (line 180) |
-
-### Branding
-
-To customize branding:
-1. Replace logo images in `assets/images/`
-2. Edit the footer section in `index.html`
-3. Update the page title in `index.html`
-
-### Logo Replacement
-
-The default logo is WikiPathways-branded. For your own deployment:
-
-1. Create a logo image (recommended: 200x50 pixels, PNG format)
-2. Replace `assets/images/wikipathways-snorql-logo.png` with your logo
-3. Or update `index.html` line 40 to reference a different logo file
-
-For Docker deployments, mount your custom logo:
-```yaml
-volumes:
-  - ./my-logo.png:/usr/share/nginx/html/assets/images/wikipathways-snorql-logo.png
-```
-
+| Change | Where |
+|---|---|
+| SPARQL endpoint, examples repository, page title | `config.js` (or `SNORQL_ENDPOINT`, `SNORQL_EXAMPLES_REPO`, `SNORQL_TITLE` in `.env`) |
+| Logo, footer, navbar links, meta description | `config.js` (`logo`, `footer`, `linkouts`, `metaDescription`) |
+| Colours and layout | `theme.css` |
+| Namespaces shown as prefixes in results | `config.js` (`namespaces`) |
+| Autocomplete lists for example parameters | `config.js` (`autocompleteTypes`) |
+| Structured data in the page | `head-extra.html` |
+| Engine version | `ENGINE` in the `Dockerfile` / `SNORQL_ENGINE` in `.env` |
 
 ## Loading RDF Data
 
@@ -424,118 +355,10 @@ If CORS is working, you'll see SPARQL results. If not, you'll see a CORS error.
 
 ## Adopting for Your Own SPARQL Endpoint
 
-This section guides you through setting up Snorql-UI with your own RDF data and SPARQL endpoint.
-
-### Folder Structure
-
-```
-your-project/
-├── db/                          # Virtuoso database files
-│   └── data/
-│       ├── load.sh              # Your customized loader script
-│       └── YourData.ttl         # Your RDF data file(s)
-├── scripts/
-│   ├── load.sh.template         # Template (don't modify)
-│   └── your-loader.sh           # Optional: automated data fetching
-├── docker-compose.yml           # Your configuration
-├── assets/                      # Snorql UI assets
-├── index.html                   # Snorql UI entry point
-└── ...
-```
-
-### Quick Start
-
-1. **Copy the example configuration files:**
-   
-```bash
-   cp docker-compose.example.yml docker-compose.yml
-   cp .env.example .env
-```
-
-2. **Create data directory and loader script:**
-```bash
-   mkdir -p db/data
-   cp scripts/load.sh.template db/data/load.sh
-   chmod +x db/data/load.sh
-```
-
-3. **Customize the loader script (`db/data/load.sh`):**
-   - Set `GRAPH_URI` to your named graph (e.g., `http://yourdomain.org/data/`)
-   - Set `DATA_FILE` to your RDF file name
-   - Add your domain-specific namespace prefixes
-
-4. **Place your RDF data files in `db/data/`:**
-   - Supported formats: Turtle (`.ttl`), RDF/XML (`.rdf`), N-Triples (`.nt`)
-
-5. **Configure `.env` with your settings:**
-   - `SNORQL_ENDPOINT` - Your SPARQL endpoint URL
-   - `SNORQL_EXAMPLES_REPO` - Your GitHub queries repository
-   - `SNORQL_TITLE` - Browser tab title
-   - `VIRTUOSO_PASSWORD` - Secure password for production
-
-6. **Start the services:**
-   ```bash
-   docker compose up -d
-   ```
-   Check if your docker `docker ps -a | grep plantmetwiki `
-
-7. **Load your data into Virtuoso:**
-   ```bash
-   docker exec -it my-virtuoso /bin/bash
-   cd /database/data
-   ./load.sh load.log dba123
-   exit
-   ```
-
-8. **Access the UI at http://localhost:8090**
-
-### Customization Checklist
-
-- [ ] **Graph URI** in `db/data/load.sh` - Your named graph identifier
-- [ ] **Namespace prefixes** in `db/data/load.sh` - Add your domain-specific prefixes
-- [ ] **SNORQL_ENDPOINT** in `.env` - Your SPARQL endpoint URL
-- [ ] **SNORQL_EXAMPLES_REPO** in `.env` - Your GitHub queries repository
-- [ ] **SNORQL_TITLE** in `.env` - Browser tab title
-- [ ] **VIRTUOSO_PASSWORD** in `.env` - Secure password for production
-- [ ] **Optional:** `assets/js/namespaces.js` - For UI prefix expansion in results
-
-### Example: Minimal Custom Setup
-
-```bash
-# 1. Clone repository
-git clone https://github.com/wikipathways/Snorql-UI.git my-sparql-ui
-cd my-sparql-ui
-
-# 2. Set up configuration
-cp docker-compose.example.yml docker-compose.yml
-cp .env.example .env
-mkdir -p db/data
-cp scripts/load.sh.template db/data/load.sh
-
-# 3. Edit db/data/load.sh
-#    Change: GRAPH_URI="http://myproject.org/data/"
-#    Change: DATA_FILE="mydata.ttl"
-#    Add your namespace prefixes
-
-# 4. Copy your data file
-cp /path/to/mydata.ttl db/data/
-
-# 5. Edit .env
-#    Change: SNORQL_ENDPOINT=http://localhost:8890/sparql
-#    Change: SNORQL_EXAMPLES_REPO=https://github.com/myorg/sparql-queries
-#    Change: SNORQL_TITLE=My SPARQL Explorer
-
-# 6. Start and load
-docker compose up -d
-docker exec -it plantmetwiki-virtuoso /bin/bash -c "cd /db/scripts && ./load.sh load.log plantmetwikipw"
-
-# For stopping the services 
-docker compose down 
-# You need to enable CORS ones you have built 
-./scripts/enable-cors.sh
-
-# 7. Access at http://localhost:8011
-```
+For an explorer of another endpoint, start from the engine: its
+[FORK.md](https://github.com/wikipathways/Snorql-UI/blob/master/FORK.md) describes the same kind of
+instance repository as this one (a `Dockerfile` `FROM` the engine image plus `config.js`,
+`theme.css` and images). The data loading scripts here can be reused for any RDF data:
 
 ### Automated Data Loading with Quality Control
 
@@ -568,7 +391,7 @@ Edit the script's CONFIGURATION section to set defaults for your deployment, the
 - **Multiple data files:** Add multiple `ld_dir()` commands in `load.sh` or use wildcards
 - **Turtle validation:** Install `raptor2-utils` (`sudo apt-get install raptor2-utils`) for syntax validation
 - **Federated queries:** The template includes grants for SPARQL federation (SERVICE keyword)
-- **Namespace prefixes:** Also update `assets/js/namespaces.js` so URIs display as compact QNames in the UI
+- **Namespace prefixes:** Also add them to `namespaces` in `config.js` so URIs display as compact QNames in the UI
 
 
 ## Local Development Workflow for PlantMetWiki
@@ -578,7 +401,6 @@ A complete local stack — Snorql-UI served from your machine, with a local Virt
 ```
 scripts/download-plantmetwiki-data.py   # fetch latest TTLs from Zenodo
 scripts/load-plantmetwiki-data.sh       # bulk-load TTLs into local Virtuoso
-scripts/local-dev.sh                    # serve the UI without Docker
 ```
 
 ### Step 1 — Configure `.env`
@@ -653,31 +475,15 @@ bash scripts/enable-cors.sh
 
 This is mandatory: without CORS, the browser blocks SPARQL requests from `localhost:8088` to `localhost:8890`. The default config (`CORS_ORIGINS=*`) accepts requests from any origin — fine for local dev, restrict in production.
 
-### Step 6 — Serve the Snorql-UI locally
+### Step 6 — Start the explorer locally
 
 ```bash
-bash scripts/local-dev.sh
-# or with a custom port:
-bash scripts/local-dev.sh 3000
+docker compose up -d --build snorql
 ```
 
-The script:
-- Reads `.env` and applies the same `sed` substitutions that `script.sh` does inside the Docker image (no Docker rebuild needed)
-- Creates a temp working copy with the injected configuration
-- Serves the static files via `python3 -m http.server`
-
-Then open **http://localhost:8088/** — the UI is pointing to your local Virtuoso. The first time you query you'll see the loaded graphs in the namespaces drop-down.
-
-### Switching between local and production endpoints
-
-The `.env` file documents two options. To test against the production endpoint without local data, comment out the local URL and uncomment the production one:
-
-```diff
-- SNORQL_ENDPOINT=http://localhost:8890/sparql
-+ SNORQL_ENDPOINT=https://sparql-plantmetwiki.bioinformatics.nl/sparql
-```
-
-Restart `local-dev.sh` to pick up the change.
+Then open **http://localhost:8088/**. With `SNORQL_ENDPOINT=http://localhost:8890/sparql` in `.env`
+the explorer queries your local Virtuoso; with the variable empty it uses the production endpoint
+from `config.js`. After changing `.env`, run the same command again.
 
 ### Refreshing the data after a new release
 
