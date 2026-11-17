@@ -135,7 +135,7 @@ All variables can be set in `.env`, exported in your shell, or hardcoded in `doc
 |----------|---------|-------------|
 | `SNORQL_CONTAINER` | `my-snorql` | Docker container name |
 | `SNORQL_PORT` | `8088` | HTTP port for web interface |
-| `SNORQL_ENGINE` | `ghcr.io/wikipathways/snorql-ui:1.5.1` | Engine image the explorer is built on |
+| `SNORQL_ENGINE` | `ghcr.io/wikipathways/snorql-ui:1.6.0` | Engine image the explorer is built on |
 | `SNORQL_ENDPOINT` | (empty: `config.js`) | SPARQL endpoint URL (as seen from browser) |
 | `SNORQL_EXAMPLES_REPO` | (empty: `config.js`) | GitHub repository with the example queries |
 | `SNORQL_EXAMPLES_INDEX_URL` | (empty) | Base URL of the examples index, when not the repository's `examples-index` branch |
