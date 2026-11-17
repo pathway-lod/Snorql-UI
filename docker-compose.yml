@@ -1,17 +1,12 @@
-# Snorql-UI Docker Compose Example
-# ================================
-# Copy this file to docker-compose.yml and optionally create a .env file
-# for custom configuration.
+# PlantMetWiki SPARQL Explorer: Docker Compose
+# =============================================
+# Settings come from a .env file next to this one; .env.example lists them
+# with their defaults.
 #
-# Usage (basic):
-#   cp docker-compose.example.yml docker-compose.yml
-#   docker compose up -d
-#
-# Usage (with .env configuration):
-#   cp docker-compose.example.yml docker-compose.yml
+# Usage:
 #   cp .env.example .env
 #   # Edit .env with your settings
-#   docker compose up -d
+#   docker compose up -d --build
 #
 # Services:
 #   - virtuoso: OpenLink Virtuoso SPARQL endpoint (optional, remove if using external endpoint)
@@ -53,29 +48,27 @@ services:
   # Snorql-UI Web Interface
   # ---------------------------------------------------------------------------
   snorql:
-    build: .
+    build:
+      context: .
+      args:
+        # The Snorql-UI engine image this instance is built on (see Dockerfile).
+        ENGINE: ${SNORQL_ENGINE:-ghcr.io/wikipathways/snorql-ui:1.6.0}
     restart: always
     container_name: ${SNORQL_CONTAINER:-my-snorql}
     depends_on:
       # makes sure that SNORQL starts after Virtuoso (if used)
       - virtuoso
-
-    # Uncomment to use local files for development:
-    # volumes:
-    #   - ./:/usr/local/apache2/htdocs
+    # config.js holds the PlantMetWiki settings; these variables override them when set
+    # (an empty value keeps config.js).
     environment:
       # SPARQL endpoint URL (as seen from the browser, not container)
-      # Use localhost if running Virtuoso locally, or your external endpoint URL
-      - SNORQL_ENDPOINT=${SNORQL_ENDPOINT:-http://localhost:8890/sparql}
-
-      # GitHub repository containing .rq example files
-      # Standard repo: https://github.com/owner/repo
-      # Subfolder: https://api.github.com/repos/owner/repo/contents/folder
-      - SNORQL_EXAMPLES_REPO=${SNORQL_EXAMPLES_REPO:-https://github.com/your-org/your-sparql-queries}
-
+      - SNORQL_ENDPOINT=${SNORQL_ENDPOINT:-}
+      # GitHub repository with the example queries (.ttl files and their published index)
+      - SNORQL_EXAMPLES_REPO=${SNORQL_EXAMPLES_REPO:-}
+      # Base URL of the examples index when it is not the repository's examples-index branch
+      - SNORQL_EXAMPLES_INDEX_URL=${SNORQL_EXAMPLES_INDEX_URL:-}
       # Browser tab title
-      - SNORQL_TITLE=${SNORQL_TITLE:-My SPARQL Explorer}
-
+      - SNORQL_TITLE=${SNORQL_TITLE:-}
       # Default RDF graph (leave empty for default behavior)
       # - DEFAULT_GRAPH=${DEFAULT_GRAPH:-}
     ports:

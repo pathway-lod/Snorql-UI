@@ -6,7 +6,7 @@
 # Customize the variables below for your specific use case.
 #
 # Prerequisites:
-#   - Virtuoso container running (see docker-compose.example.yml)
+#   - Virtuoso container running (see docker-compose.yml and .env.example)
 #   - isql-v command available (installed with Virtuoso client tools)
 #     OR use docker exec to run isql inside the container
 #
