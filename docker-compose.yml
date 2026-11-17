@@ -1,17 +1,12 @@
-# Snorql-UI Docker Compose Example
-# ================================
-# Copy this file to docker-compose.yml and optionally create a .env file
-# for custom configuration.
+# PlantMetWiki SPARQL Explorer: Docker Compose
+# =============================================
+# Settings come from a .env file next to this one; .env.example lists them
+# with their defaults.
 #
-# Usage (basic):
-#   cp docker-compose.example.yml docker-compose.yml
-#   docker compose up -d
-#
-# Usage (with .env configuration):
-#   cp docker-compose.example.yml docker-compose.yml
+# Usage:
 #   cp .env.example .env
 #   # Edit .env with your settings
-#   docker compose up -d
+#   docker compose up -d --build
 #
 # Services:
 #   - virtuoso: OpenLink Virtuoso SPARQL endpoint (optional, remove if using external endpoint)

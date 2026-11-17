@@ -117,7 +117,7 @@ The `.env` file is gitignored, so your local configuration won't be committed.
     │
     ├── Docker Compose (reads .env automatically)
     │       └── Container environment variables
-    │               └── script.sh (configures Snorql-UI at startup)
+    │               └── the engine's script.sh (applies the SNORQL_* values at startup)
     │
     └── Shell scripts (via scripts/config.sh)
             └── enable-cors.sh, load-rdf-example.sh, etc.
@@ -404,6 +404,7 @@ A complete local stack — Snorql-UI served from your machine, with a local Virt
 ```
 scripts/download-plantmetwiki-data.py   # fetch latest TTLs from Zenodo
 scripts/load-plantmetwiki-data.sh       # bulk-load TTLs into local Virtuoso
+scripts/enable-cors.sh                  # allow browser queries to the local Virtuoso
 ```
 
 ### Step 1 — Configure `.env`
@@ -629,7 +630,7 @@ ORDER BY DESC(?n)
 The older container-rebuild flow is still present:
 
 ```bash
-./plantmetwiki-rebuild.sh       # rebuilds the Snorql Docker image
+./plantmetwiki-rebuild.sh       # starts the stack and enables CORS (does not rebuild the snorql image)
 ./plantmetwiki-upload-data.sh   # loads data using the old loader
 ```
 
@@ -642,6 +643,17 @@ Public UI:
 
 Public SPARQL endpoint:
 `https://plantmetwiki.bioinformatics.nl/sparql` → container port 8890
+
+After a change to the engine tag (`SNORQL_ENGINE`) or to a file that the `Dockerfile` copies into
+the image (`config.js`, `theme.css`, `images/`, `head-extra.html`, `httpd-proxy.conf`, `sd.ttl`,
+`vocab/pmw.ttl`), rebuild and restart the explorer:
+
+```bash
+docker compose up -d --build snorql
+```
+
+`./plantmetwiki-rebuild.sh up` runs `docker compose up -d` without `--build`, so on its own it keeps
+the existing snorql image and does not pick up such changes.
 
 ##  Changing the ports to the exposed ones for the URL 
 Port summary: change them in the .env file 
